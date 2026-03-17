@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CivicPulse</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Inter',sans-serif; background:#fff; color:#111827; -webkit-font-smoothing:antialiased; }
+
+  .container { max-width:1400px; margin:0 auto; padding:0 48px; }
+
+  /* Header */
+  .header { padding:36px 0 28px; border-bottom:2px solid #111827; margin-bottom:32px; display:flex; justify-content:space-between; align-items:flex-end; }
+  .header-left .label { font-size:10px; color:#9ca3af; text-transform:uppercase; letter-spacing:3px; }
+  .header-left h1 { font-size:36px; font-weight:300; margin-top:6px; letter-spacing:-0.5px; }
+  .header-left .sub { font-size:13px; color:#6b7280; margin-top:4px; }
+  .header-right { text-align:right; font-size:10px; color:#9ca3af; letter-spacing:0.5px; line-height:1.8; }
+
+  /* KPI bar */
+  .kpi-bar { display:grid; grid-template-columns:repeat(5,1fr); gap:0; padding:28px 0; border-bottom:1px solid #e5e7eb; margin-bottom:32px; }
+  .kpi { padding-right:32px; }
+  .kpi:not(:last-child) { border-right:1px solid #e5e7eb; padding-left:32px; }
+  .kpi:first-child { padding-left:0; }
+  .kpi .num { font-size:36px; font-weight:300; line-height:1; }
+  .kpi .num.red { color:#b91c1c; }
+  .kpi .num.amber { color:#b45309; }
+  .kpi .num.green { color:#047857; }
+  .kpi .num.muted { color:#374151; }
+  .kpi .lbl { font-size:10px; color:#9ca3af; text-transform:uppercase; letter-spacing:1.5px; margin-top:6px; }
+
+  /* Controls */
+  .controls { display:flex; gap:16px; align-items:flex-end; margin-bottom:32px; }
+  .controls select {
+    flex:1; padding:12px 16px; font-size:13px; font-family:inherit;
+    border:1px solid #d1d5db; border-radius:2px; background:#fff; color:#111827;
+    appearance:none; cursor:pointer;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%239ca3af' fill='none' stroke-width='1.5'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-position:right 16px center;
+  }
+  .controls select:focus { outline:none; border-color:#111827; }
+  .controls button {
+    padding:12px 36px; font-size:11px; font-family:inherit; font-weight:600;
+    text-transform:uppercase; letter-spacing:1.5px;
+    background:#111827; color:#fff; border:none; border-radius:2px; cursor:pointer;
+    transition:background 0.15s;
+  }
+  .controls button:hover { background:#374151; }
+  .controls button:disabled { background:#9ca3af; cursor:not-allowed; }
+  .select-label { font-size:10px; color:#9ca3af; text-transform:uppercase; letter-spacing:1.5px; margin-bottom:6px; }
+
+  /* Two-column layout */
+  .main-grid { display:grid; grid-template-columns:320px 1fr; gap:40px; margin-bottom:32px; }
+
+  /* ZIP panel */
+  .zip-panel { }
+  .zip-panel .zip-title { font-size:10px; color:#9ca3af; text-transform:uppercase; letter-spacing:2px; margin-bottom:12px; }
+  .zip-panel .zip-code { font-size:28px; font-weight:300; }
+  .zip-panel .zip-score { font-size:13px; color:#6b7280; margin-top:4px; }
+  .zip-panel .zip-score strong { color:#111827; }
+  .metric-table { width:100%; border-collapse:collapse; margin-top:20px; }
+  .metric-table th { font-size:9px; color:#9ca3af; text-transform:uppercase; letter-spacing:1px; text-align:left; padding:6px 0; border-bottom:1px solid #d1d5db; }
+  .metric-table td { font-size:13px; padding:6px 0; border-bottom:1px solid #f3f4f6; }
+  .metric-table td.val { font-weight:600; }
+  .metric-table td.county { color:#9ca3af; font-size:12px; }
+  .metric-table td.danger { color:#b91c1c; font-weight:600; }
+
+  .biz-title { font-size:9px; color:#9ca3af; text-transform:uppercase; letter-spacing:1px; margin-top:24px; padding-bottom:6px; border-bottom:1px solid #d1d5db; }
+  .biz-item { padding:6px 0; border-bottom:1px solid #f3f4f6; font-size:12px; display:flex; justify-content:space-between; }
+  .biz-item .name { font-weight:500; }
+  .biz-item .stats { color:#6b7280; }
+  .biz-item .stats .red { color:#b91c1c; font-weight:600; }
+
+  /* Agent log */
+  .log-panel { }
+  .log-title { font-size:10px; color:#9ca3af; text-transform:uppercase; letter-spacing:2px; margin-bottom:8px; }
+  .log-box {
+    background:#fafafa; border:1px solid #e5e7eb; border-radius:2px;
+    padding:16px; max-height:300px; overflow-y:auto; min-height:120px;
+  }
+  .log-entry { padding:3px 0; font-size:11.5px; line-height:1.6; border-bottom:1px solid #f3f4f6; }
+  .log-entry .ts { color:#9ca3af; font-family:monospace; font-size:10px; }
+  .log-entry .agent { font-weight:600; font-size:9px; text-transform:uppercase; letter-spacing:1px; margin:0 8px; }
+  .log-entry .msg { color:#374151; }
+  .log-entry .flagged { color:#b91c1c; font-weight:600; }
+
+  /* Agent outputs */
+  .agents-divider { height:1px; background:#e5e7eb; margin:8px 0 16px; }
+  .agent-headers { display:grid; grid-template-columns:repeat(4,1fr); gap:0; border-bottom:1px solid #e5e7eb; margin-bottom:2px; }
+  .agent-header { padding:10px 14px; }
+  .agent-header:not(:last-child) { border-right:1px solid #e5e7eb; }
+  .agent-header .name { font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:2px; }
+  .agent-header .desc { font-size:9px; color:#9ca3af; margin-top:2px; }
+  .agent-header .name.sentinel { color:#047857; }
+  .agent-header .name.analyst { color:#6d28d9; }
+  .agent-header .name.advisor { color:#1d4ed8; }
+  .agent-header .name.messenger { color:#b45309; }
+
+  .agent-outputs { display:grid; grid-template-columns:repeat(4,1fr); gap:0; }
+  .agent-box {
+    padding:16px;
+    min-height:320px;
+    font-size:12.5px;
+    line-height:1.8;
+    color:#374151;
+    background:#fafafa;
+    border-right:1px solid #e5e7eb;
+    border-bottom:1px solid #e5e7eb;
+    white-space:pre-wrap;
+    word-wrap:break-word;
+    overflow-y:auto;
+    max-height:420px;
+  }
+  .agent-box:last-child { border-right:none; }
+  .agent-box.waiting { color:#9ca3af; font-style:italic; }
+  .agent-box.active { background:#fff; }
+
+  /* Footer */
+  .footer { text-align:center; padding:28px 0; border-top:1px solid #e5e7eb; margin-top:24px; }
+  .footer span { font-size:9px; color:#9ca3af; text-transform:uppercase; letter-spacing:2px; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width:4px; }
+  ::-webkit-scrollbar-track { background:transparent; }
+  ::-webkit-scrollbar-thumb { background:#d1d5db; border-radius:2px; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-left">
+      <div class="label">Community Health Intelligence</div>
+      <h1>CivicPulse</h1>
+      <div class="sub">Santa Clara County · Human Impact Track</div>
+    </div>
+    <div class="header-right">
+      NVIDIA DGX Spark (GB10) · Nemotron 70B<br>
+      OpenClaw · 4 Agents · On-device inference
+    </div>
+  </div>
+
+  <!-- KPI Bar -->
+  <div class="kpi-bar" id="kpis"></div>
+
+  <!-- Controls -->
+  <div>
+    <div class="select-label">Neighborhood — Flagged by Sentinel</div>
+    <div class="controls">
+      <select id="zipSelect"></select>
+      <button id="runBtn" onclick="runPipeline()">Run Pipeline</button>
+    </div>
+  </div>
+
+  <!-- Main: ZIP stats + Log -->
+  <div class="main-grid">
+    <div class="zip-panel" id="zipPanel"></div>
+    <div class="log-panel">
+      <div class="log-title">Agent Communication Log</div>
+      <div class="log-box" id="logBox">
+        <div style="color:#9ca3af;font-size:12px;">Pipeline idle. Select a neighborhood and run.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Agent outputs -->
+  <div class="agents-divider"></div>
+  <div class="agent-headers">
+    <div class="agent-header"><div class="name sentinel">Sentinel</div><div class="desc">Risk triage · Rule-based</div></div>
+    <div class="agent-header"><div class="name analyst">Analyst</div><div class="desc">Cross-silo reasoning · Nemotron 70B</div></div>
+    <div class="agent-header"><div class="name advisor">Advisor</div><div class="desc">Health Officer brief · Nemotron 70B</div></div>
+    <div class="agent-header"><div class="name messenger">Messenger</div><div class="desc">Restaurant coaching · Nemotron 70B</div></div>
+  </div>
+  <div class="agent-outputs">
+    <div class="agent-box waiting" id="box-SENTINEL">Waiting for scan...</div>
+    <div class="agent-box waiting" id="box-ANALYST">Waiting for Sentinel...</div>
+    <div class="agent-box waiting" id="box-ADVISOR">Waiting for Analyst...</div>
+    <div class="agent-box waiting" id="box-MESSENGER">Waiting for Advisor...</div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <span>CivicPulse · Nemotron 70B · OpenClaw · NVIDIA DGX Spark (GB10) · All inference on-device</span>
+  </div>
+</div>
+
+<script>
+const AGENT_COLORS = {SENTINEL:'#047857', ANALYST:'#6d28d9', ADVISOR:'#1d4ed8', MESSENGER:'#b45309'};
+let data = null;
+
+async function init() {
+  const resp = await fetch('/api/data');
+  data = await resp.json();
+
+  // KPIs
+  const s = data.summary;
+  document.getElementById('kpis').innerHTML = `
+    <div class="kpi"><div class="num red">${s.total_critical.toLocaleString()}</div><div class="lbl">Critical Violations</div></div>
+    <div class="kpi"><div class="num amber">${s.total_red.toLocaleString()}</div><div class="lbl">Failed Inspections</div></div>
+    <div class="kpi"><div class="num red">${s.total_repeat_offenders.toLocaleString()}</div><div class="lbl">Repeat Offenders</div></div>
+    <div class="kpi"><div class="num muted">${s.total_businesses.toLocaleString()}</div><div class="lbl">Businesses Monitored</div></div>
+    <div class="kpi"><div class="num green">4</div><div class="lbl">Active Agents</div></div>
+  `;
+
+  // Dropdown
+  const sel = document.getElementById('zipSelect');
+  data.top_zips.forEach(z => {
+    const opt = document.createElement('option');
+    opt.value = z.zip;
+    opt.textContent = `ZIP ${z.zip} — Risk ${z.risk_score.toFixed(0)} | ${z.total_red} Red | ${z.total_critical} Critical | Poverty ${z.poverty_rate}%`;
+    sel.appendChild(opt);
+  });
+  sel.addEventListener('change', () => renderZip(sel.value));
+  renderZip(data.top_zips[0].zip);
+}
+
+function renderZip(zipCode) {
+  const z = data.top_zips.find(x => x.zip === zipCode);
+  if (!z) return;
+
+  let bizHtml = '';
+  (z.worst_businesses || []).slice(0, 4).forEach(b => {
+    bizHtml += `<div class="biz-item">
+      <span class="name">${b.name.substring(0,28)}</span>
+      <span class="stats">${b.critical_violations} crit · <span class="red">${b.red_inspections} Red</span></span>
+    </div>`;
+  });
+
+  document.getElementById('zipPanel').innerHTML = `
+    <div class="zip-title">Selected Neighborhood</div>
+    <div class="zip-code">ZIP ${z.zip}</div>
+    <div class="zip-score">Risk Score: <strong>${z.risk_score.toFixed(0)}</strong> / 100</div>
+    <table class="metric-table">
+      <tr><th>Metric</th><th>This ZIP</th><th>County</th></tr>
+      <tr><td>Food Businesses</td><td class="val">${z.businesses}</td><td class="county">8,588</td></tr>
+      <tr><td>Red Inspections</td><td class="danger">${z.total_red}</td><td class="county">800</td></tr>
+      <tr><td>Critical Violations</td><td class="danger">${z.total_critical}</td><td class="county">9,255</td></tr>
+      <tr><td>Repeat Offenders</td><td class="danger">${z.repeat_offenders}</td><td class="county">161</td></tr>
+      <tr><td>Crime on Food Streets</td><td class="val">${z.crime_on_food_streets.toLocaleString()}</td><td class="county">—</td></tr>
+      <tr><td>Poverty Rate</td><td class="val">${z.poverty_rate}%</td><td class="county">6.5%</td></tr>
+      <tr><td>Median Income</td><td class="val">$${z.median_income.toLocaleString()}</td><td class="county">$153K</td></tr>
+    </table>
+    <div class="biz-title">Highest-Risk Businesses</div>
+    ${bizHtml}
+  `;
+}
+
+function addLog(agent, msg) {
+  const box = document.getElementById('logBox');
+  if (box.querySelector('div[style]')) box.innerHTML = '';
+  const isFlagged = msg.includes('FLAGGED');
+  box.innerHTML += `<div class="log-entry">
+    <span class="ts">${new Date().toTimeString().slice(0,8)}</span>
+    <span class="agent" style="color:${AGENT_COLORS[agent]||'#6b7280'}">${agent}</span>
+    <span class="msg">${isFlagged ? '<span class="flagged">'+msg+'</span>' : msg}</span>
+  </div>`;
+  box.scrollTop = box.scrollHeight;
+}
+
+async function runPipeline() {
+  const zip = document.getElementById('zipSelect').value;
+  const btn = document.getElementById('runBtn');
+  btn.disabled = true;
+  btn.textContent = 'Running...';
+
+  // Reset
+  document.getElementById('logBox').innerHTML = '';
+  ['SENTINEL','ANALYST','ADVISOR','MESSENGER'].forEach(a => {
+    const box = document.getElementById('box-'+a);
+    box.textContent = '';
+    box.className = 'agent-box waiting';
+  });
+
+  const evtSource = new EventSource(`/api/run/${zip}`);
+  let currentAgent = null;
+
+  evtSource.onmessage = (event) => {
+    const d = JSON.parse(event.data);
+
+    if (d.type === 'done') {
+      evtSource.close();
+      btn.disabled = false;
+      btn.textContent = 'Run Pipeline';
+      return;
+    }
+
+    if (d.type === 'log') {
+      addLog(d.agent, d.msg);
+    }
+
+    if (d.type === 'output') {
+      const box = document.getElementById('box-'+d.agent);
+      box.textContent = d.text;
+      box.className = 'agent-box active';
+    }
+
+    if (d.type === 'stream') {
+      if (d.agent !== currentAgent) {
+        currentAgent = d.agent;
+        const box = document.getElementById('box-'+d.agent);
+        box.textContent = '';
+        box.className = 'agent-box active';
+      }
+      document.getElementById('box-'+d.agent).textContent += d.delta;
+    }
+  };
+
+  evtSource.onerror = () => {
+    evtSource.close();
+    btn.disabled = false;
+    btn.textContent = 'Run Pipeline';
+  };
+}
+
+init();
+</script>
+</body>
+</html>

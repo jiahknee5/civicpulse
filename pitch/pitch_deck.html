@@ -1,0 +1,2775 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CivicPulse — NVIDIA GB10 Hackathon</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: #ffffff;
+    color: #1e293b;
+    overflow: hidden;
+  }
+
+  .slide {
+    display: none;
+    width: 100vw;
+    height: 100vh;
+    padding: 60px 80px;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .slide.active { display: flex; }
+
+  .hero-number { font-size: 140px; font-weight: 700; line-height: 1; color: #dc2626; }
+  .hero-number.green { color: #16a34a; }
+  .hero-number.blue { color: #2563eb; }
+  .hero-number.amber { color: #d97706; }
+
+  h1 { font-size: 56px; font-weight: 600; line-height: 1.15; margin-bottom: 20px; color: #0f172a; }
+  h2 { font-size: 36px; font-weight: 500; line-height: 1.3; margin-bottom: 16px; color: #64748b; }
+  h3 { font-size: 13px; font-weight: 600; color: #94a3b8; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 2px; }
+  p { font-size: 22px; line-height: 1.6; color: #475569; max-width: 900px; }
+  .small { font-size: 16px; color: #94a3b8; }
+  .accent { color: #dc2626; font-weight: 600; }
+  .accent-green { color: #16a34a; font-weight: 600; }
+  .accent-blue { color: #2563eb; font-weight: 600; }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: start; }
+  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 40px; }
+  .four-col { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 30px; }
+
+  .card {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 32px;
+  }
+  .card h4 { font-size: 18px; font-weight: 600; margin-bottom: 8px; color: #0f172a; }
+  .card p { font-size: 16px; color: #475569; }
+  .card .stat { font-size: 48px; font-weight: 700; margin-bottom: 4px; }
+  .card .stat.red { color: #dc2626; }
+  .card .stat.green { color: #16a34a; }
+  .card .stat.blue { color: #2563eb; }
+  .card .stat.amber { color: #d97706; }
+
+  .data-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+  .data-table th { text-align: left; font-size: 14px; color: #94a3b8; padding: 12px 16px; border-bottom: 2px solid #e2e8f0; text-transform: uppercase; letter-spacing: 1px; }
+  .data-table td { font-size: 18px; padding: 14px 16px; border-bottom: 1px solid #f1f5f9; color: #1e293b; }
+  .data-table tr:hover { background: #f8fafc; }
+
+  .badge { display: inline-block; padding: 4px 10px; border-radius: 6px; font-size: 13px; font-weight: 600; }
+  .badge.red { background: #fee2e2; color: #dc2626; }
+  .badge.green { background: #dcfce7; color: #16a34a; }
+  .badge.amber { background: #fef9c3; color: #d97706; }
+
+  .pipeline { display: flex; align-items: center; gap: 12px; margin: 30px 0; }
+  .pipeline-node {
+    background: #f8fafc;
+    border: 2px solid #3b82f6;
+    border-radius: 12px;
+    padding: 20px 24px;
+    text-align: center;
+    flex: 1;
+  }
+  .pipeline-node.nano { border-color: #16a34a; }
+  .pipeline-node.big { border-color: #7c3aed; }
+  .pipeline-node h4 { font-size: 16px; margin-bottom: 4px; color: #0f172a; }
+  .pipeline-node .model { font-size: 12px; color: #94a3b8; }
+  .pipeline-arrow { font-size: 24px; color: #cbd5e1; }
+
+  .spacer { height: 30px; }
+  .spacer-lg { height: 50px; }
+  .divider { height: 1px; background: #e2e8f0; margin: 30px 0; }
+
+  .slide-footer {
+    position: absolute;
+    bottom: 30px;
+    left: 80px;
+    right: 80px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    color: #cbd5e1;
+  }
+
+  .nav {
+    position: fixed;
+    bottom: 20px;
+    right: 30px;
+    display: flex;
+    gap: 10px;
+    z-index: 100;
+  }
+  .nav button {
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    color: #475569;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+  }
+  .nav button:hover { background: #e2e8f0; }
+
+  .slide-counter {
+    position: fixed;
+    bottom: 25px;
+    left: 30px;
+    font-size: 14px;
+    color: #cbd5e1;
+    z-index: 100;
+  }
+
+  .highlight {
+    background: #f8fafc;
+    border-left: 4px solid #dc2626;
+    padding: 24px 32px;
+    border-radius: 0 12px 12px 0;
+    margin: 20px 0;
+  }
+  .highlight.green { border-left-color: #16a34a; }
+  .highlight.blue { border-left-color: #2563eb; }
+  .highlight p { font-size: 20px; color: #1e293b; }
+
+  .code-block {
+    font-family: monospace;
+    font-size: 14px;
+    line-height: 1.7;
+    background: #0f172a;
+    color: #94a3b8;
+    padding: 24px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+  }
+</style>
+</head>
+<body>
+
+<!-- SLIDE 1: Title -->
+<div class="slide active" id="s1">
+  <h3>NVIDIA GB10 Hackathon | Human Impact Track</h3>
+  <div class="spacer-lg"></div>
+  <h1>CivicPulse</h1>
+  <h2>The neighborhoods falling through every crack at once<br>finally have someone watching.</h2>
+  <div class="spacer-lg"></div>
+  <p>An autonomous multi-agent system that detects compounding community risk<br>across food safety, crime, health, and economic data — and takes action.</p>
+  <div class="slide-footer">
+    <span>4 Agents | Nemotron 70B | OpenClaw | NVIDIA DGX Spark</span>
+    <span>Johnny Chung</span>
+  </div>
+</div>
+
+<!-- SLIDE 2: Executive Summary (McKinsey-style) -->
+<div class="slide" id="s2">
+  <div style="max-width:1100px;">
+    <h3>The Situation</h3>
+    <div class="spacer"></div>
+    <h1 style="font-size:46px;line-height:1.25;font-weight:600;color:#1e293b;">The neighborhoods most at risk of a food safety crisis<br>are also the poorest, the most crime-affected,<br>and the hardest to reach.<br><span class="accent">No agency sees the full picture.</span></h1>
+    <div class="spacer-lg"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:32px;">
+      <div style="border-top:3px solid #dc2626;padding-top:20px;">
+        <div style="font-size:48px;font-weight:700;color:#ef4444;line-height:1;">9,255</div>
+        <div style="font-size:16px;color:#94a3b8;margin-top:8px;line-height:1.5;">critical food violations on record — concentrated in the county's lowest-income zip codes</div>
+      </div>
+      <div style="border-top:3px solid #d97706;padding-top:20px;">
+        <div style="font-size:48px;font-weight:700;color:#eab308;line-height:1;">+28%</div>
+        <div style="font-size:16px;color:#94a3b8;margin-top:8px;line-height:1.5;">more diabetes in food-insecure tracts — every food safety failure is a health equity failure</div>
+      </div>
+      <div style="border-top:3px solid #2563eb;padding-top:20px;">
+        <div style="font-size:48px;font-weight:700;color:#3b82f6;line-height:1;">161</div>
+        <div style="font-size:16px;color:#94a3b8;margin-top:8px;line-height:1.5;">restaurants have failed inspection 2+ times — the current system schedules another routine visit</div>
+      </div>
+    </div>
+    <div class="spacer-lg"></div>
+    <div style="border-left:3px solid #16a34a;padding:16px 24px;background:#f8fafc;">
+      <p style="font-size:20px;color:#1e293b;"><strong style="color:#22c55e;">CivicPulse</strong> joins these signals, reasons about compounding risk across datasets, and delivers tailored intelligence to the officials who can act on it.</p>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 3: The Problem (Hero Stat) -->
+<div class="slide" id="s3">
+  <h3>The Problem</h3>
+  <div class="spacer"></div>
+  <div class="hero-number">6</div>
+  <h1>county datasets. Zero connections.</h1>
+  <div class="spacer"></div>
+  <p>The Sheriff's Office, Environmental Health, Public Health, and HR each have data about the same neighborhoods — stored in separate systems, analyzed by separate teams, reported to separate boards.</p>
+  <div class="spacer"></div>
+  <div class="highlight">
+    <p>When a neighborhood is failing across food safety, crime, AND health outcomes simultaneously, <strong>nobody knows</strong>.</p>
+  </div>
+</div>
+
+
+<!-- SLIDE 4: Ground Zero -->
+<div class="slide" id="s4">
+  <h3>Ground Zero</h3>
+  <div class="spacer"></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:40px;align-items:start;">
+    <div>
+      <h1>ZIP 95122<br><span style="color:#94a3b8;font-size:32px;">East San Jose</span></h1>
+      <div class="spacer"></div>
+      <div class="three-col" style="grid-template-columns: 1fr 1fr;">
+        <div class="card">
+          <div class="stat red">100</div>
+          <h4>Red Inspections</h4>
+        </div>
+        <div class="card">
+          <div class="stat red">683</div>
+          <h4>Critical Violations</h4>
+        </div>
+        <div class="card">
+          <div class="stat amber">4,187</div>
+          <h4>Crime Incidents</h4>
+        </div>
+        <div class="card">
+          <div class="stat amber">10.5%</div>
+          <h4>Poverty Rate</h4>
+        </div>
+      </div>
+    </div>
+    <div style="position:relative;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;box-shadow:0 4px 20px rgba(0,0,0,0.08);">
+      <div id="zip-map" style="height:380px;width:100%;"></div>
+      <!-- overlay label -->
+      <div style="position:absolute;top:12px;left:12px;background:white;border-radius:8px;padding:6px 12px;box-shadow:0 2px 8px rgba(0,0,0,0.15);font-family:Inter,sans-serif;z-index:500;">
+        <span style="font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:1.5px;display:block;">Ground Zero</span>
+        <span style="font-size:18px;font-weight:800;color:#dc2626;">ZIP 95122</span>
+        <span style="font-size:11px;color:#64748b;display:block;">East San Jose</span>
+      </div>
+      <!-- risk legend -->
+      <div style="position:absolute;bottom:24px;left:12px;background:white;border-radius:8px;padding:8px 12px;box-shadow:0 2px 8px rgba(0,0,0,0.12);font-family:Inter,sans-serif;font-size:11px;z-index:500;">
+        <div style="color:#94a3b8;font-weight:700;letter-spacing:1.5px;margin-bottom:5px;font-size:9px;text-transform:uppercase;">Risk Score</div>
+        <div style="display:flex;align-items:center;gap:5px;margin-bottom:3px;"><span style="width:10px;height:10px;background:#dc2626;border-radius:2px;display:inline-block;opacity:0.75;"></span><span style="color:#475569;">High (&gt;80)</span></div>
+        <div style="display:flex;align-items:center;gap:5px;margin-bottom:3px;"><span style="width:10px;height:10px;background:#f97316;border-radius:2px;display:inline-block;opacity:0.65;"></span><span style="color:#475569;">Med-high (65–80)</span></div>
+        <div style="display:flex;align-items:center;gap:5px;"><span style="width:10px;height:10px;background:#22c55e;border-radius:2px;display:inline-block;opacity:0.5;"></span><span style="color:#475569;">Lower (&lt;65)</span></div>
+      </div>
+      <svg viewBox="0 0 0 0" style="display:none;">
+      </svg>
+    </div>
+    <div>
+      <div class="highlight">
+        <p><strong>4 of the top 15 repeat-offender restaurants</strong> in the entire county are in this single zip code.</p>
+      </div>
+      <div class="spacer"></div>
+      <table class="data-table">
+        <tr><th>Restaurant</th><th>Red</th><th>Critical</th></tr>
+        <tr><td>Banh Mi Oven</td><td><span class="badge red">9</span></td><td>23</td></tr>
+        <tr><td>Tomi Sushi & Seafood</td><td><span class="badge red">5</span></td><td>11</td></tr>
+        <tr><td>Banh Cuon Ong Ta</td><td><span class="badge red">4</span></td><td>11</td></tr>
+        <tr><td>Los Arcos</td><td><span class="badge red">2</span></td><td>14</td></tr>
+        <tr><td>Lion Super-Retail</td><td><span class="badge red">4</span></td><td>10</td></tr>
+      </table>
+      <p class="small" style="margin-top:12px;">Median household income: $94,924 — below county median of $153K</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- SLIDE 5b: Cross-Silo Impact -->
+<div class="slide" id="s5b">
+  <h3>Why Cross-Silo Matters</h3>
+  <div class="spacer"></div>
+
+  <!-- Top: the concentration fact -->
+  <div style="border-left:3px solid #ef4444;padding:0 0 0 28px;margin-bottom:40px;">
+    <div style="font-size:52px;font-weight:700;color:#ef4444;line-height:1;">5 ZIP codes.</div>
+    <div style="font-size:28px;font-weight:400;color:#1e293b;margin-top:6px;">
+      14% of the county's restaurants &nbsp;→&nbsp;
+      <span style="color:#ef4444;font-weight:600;">30% of all failed inspections</span>
+      &nbsp;→&nbsp;
+      <span style="color:#eab308;font-weight:600;">210,000 residents</span>
+    </div>
+    <div style="font-size:17px;color:#475569;margin-top:8px;">These are also the county's highest-poverty, highest-crime, lowest-income neighborhoods.</div>
+  </div>
+
+  <!-- Bottom: siloed vs coordinated -->
+  <div style="display:grid;grid-template-columns:1fr 60px 1fr;gap:0;align-items:center;">
+
+    <!-- Left: siloed response -->
+    <div style="padding:28px;border:1px solid #e2e8f0;border-radius:12px;background:#f8fafc;">
+      <div style="font-size:13px;color:#64748b;text-transform:uppercase;letter-spacing:2px;margin-bottom:20px;">Without cross-silo visibility</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;text-align:center;margin-bottom:20px;">
+        <div style="padding:12px;border:1px solid #e2e8f0;border-radius:8px;">
+          <div style="font-size:11px;color:#3b82f6;text-transform:uppercase;margin-bottom:4px;">DEH</div>
+          <div style="font-size:14px;color:#94a3b8;">Schedules routine visit</div>
+        </div>
+        <div style="padding:12px;border:1px solid #e2e8f0;border-radius:8px;">
+          <div style="font-size:11px;color:#3b82f6;text-transform:uppercase;margin-bottom:4px;">Sheriff</div>
+          <div style="font-size:14px;color:#94a3b8;">Responds to incidents</div>
+        </div>
+        <div style="padding:12px;border:1px solid #e2e8f0;border-radius:8px;">
+          <div style="font-size:11px;color:#3b82f6;text-transform:uppercase;margin-bottom:4px;">Public Health</div>
+          <div style="font-size:14px;color:#94a3b8;">Runs county programs</div>
+        </div>
+      </div>
+      <div style="font-size:15px;color:#ef4444;">Banh Mi Oven fails for the 10th time.<br>Same process. Same outcome.</div>
+    </div>
+
+    <!-- Arrow -->
+    <div style="text-align:center;font-size:28px;color:#94a3b8;">→</div>
+
+    <!-- Right: coordinated response -->
+    <div style="padding:28px;border:1px solid #16a34a;border-radius:12px;background:#f0fdf4;">
+      <div style="font-size:13px;color:#22c55e;text-transform:uppercase;letter-spacing:2px;margin-bottom:20px;">With CivicPulse — 3 agencies, 1 neighborhood, 30 days</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;text-align:center;margin-bottom:20px;">
+        <div style="padding:12px;border:1px solid #bbf7d0;border-radius:8px;background:#dcfce770;">
+          <div style="font-size:11px;color:#22c55e;text-transform:uppercase;margin-bottom:4px;">DEH</div>
+          <div style="font-size:14px;color:#15803d;">Prioritizes top 5 repeat offenders with briefing</div>
+        </div>
+        <div style="padding:12px;border:1px solid #bbf7d0;border-radius:8px;background:#dcfce770;">
+          <div style="font-size:11px;color:#22c55e;text-transform:uppercase;margin-bottom:4px;">Sheriff</div>
+          <div style="font-size:14px;color:#15803d;">Targeted presence during inspection week</div>
+        </div>
+        <div style="padding:12px;border:1px solid #bbf7d0;border-radius:8px;background:#dcfce770;">
+          <div style="font-size:11px;color:#22c55e;text-transform:uppercase;margin-bottom:4px;">Public Health</div>
+          <div style="font-size:14px;color:#15803d;">Community health workers deployed same block</div>
+        </div>
+      </div>
+      <div style="font-size:15px;color:#22c55e;">Same inspector-hours. <strong>2× the expected impact.</strong><br><span style="color:#15803d;font-weight:400;">Systemic change, not another citation.</span></div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- SLIDE 7: What We Built -->
+<div class="slide" id="s7">
+  <h3>The Solution</h3>
+  <div class="spacer"></div>
+  <h1>Four agents. Four jobs.<br>One neighborhood picture.</h1>
+  <div class="spacer-lg"></div>
+  <div class="pipeline">
+    <div class="pipeline-node nano">
+      <h4>SENTINEL</h4>
+      <p style="font-size:14px;color:#94a3b8;">Monitors all datasets.<br>Flags anomalies.</p>
+      <div class="model">Nemotron 70B</div>
+    </div>
+    <div class="pipeline-arrow">&rarr;</div>
+    <div class="pipeline-node big">
+      <h4>ANALYST</h4>
+      <p style="font-size:14px;color:#94a3b8;">Cross-silo deep dive.<br>Scores severity.</p>
+      <div class="model">Nemotron 70B (deep)</div>
+    </div>
+    <div class="pipeline-arrow">&rarr;</div>
+    <div class="pipeline-node big">
+      <h4>ADVISOR</h4>
+      <p style="font-size:14px;color:#94a3b8;">Generates action plans<br>for each recipient.</p>
+      <div class="model">Nemotron 70B (deep)</div>
+    </div>
+    <div class="pipeline-arrow">&rarr;</div>
+    <div class="pipeline-node nano">
+      <h4>MESSENGER</h4>
+      <p style="font-size:14px;color:#94a3b8;">Routes to the right<br>person. Tracks follow-up.</p>
+      <div class="model">Nemotron 70B</div>
+    </div>
+  </div>
+  <div class="spacer"></div>
+  <p>Each agent makes real decisions — what to flag, how severe, what to recommend, who to alert. Orchestrated through <strong>OpenClaw</strong> on a single <strong>NVIDIA DGX Spark (GB10)</strong>.</p>
+</div>
+
+
+<!-- SLIDE: What Changes -->
+<div class="slide" id="s_whatchanges">
+  <h3>What Changes</h3>
+  <div class="spacer-lg"></div>
+  <div style="max-width:900px;">
+    <div style="display:grid;grid-template-columns:40px 1fr;gap:0;font-size:22px;line-height:1.6;">
+
+      <div style="color:#ef4444;font-weight:700;padding:20px 0;">1</div>
+      <div style="padding:20px 0;border-bottom:1px solid #e2e8f0;">
+        <strong style="color:#1e293b;">The data talks to each other.</strong><br>
+        <span style="color:#94a3b8;">Over 350,000 records across food safety, crime, and economic datasets — joined by geography for the first time. The risk pattern was invisible until the join.</span>
+      </div>
+
+      <div style="color:#eab308;font-weight:700;padding:20px 0;">2</div>
+      <div style="padding:20px 0;border-bottom:1px solid #e2e8f0;">
+        <strong style="color:#1e293b;">Agents reason about severity, not just thresholds.</strong><br>
+        <span style="color:#94a3b8;">The same 10 violations mean something different in a food-insecure neighborhood than in Palo Alto. The agent knows why.</span>
+      </div>
+
+      <div style="color:#22c55e;font-weight:700;padding:20px 0;">3</div>
+      <div style="padding:20px 0;border-bottom:1px solid #e2e8f0;">
+        <strong style="color:#1e293b;">Every output reaches a specific person with a specific ask.</strong><br>
+        <span style="color:#94a3b8;">Health Officer gets a brief. Supervisor gets a queue. Owner gets a checklist. Resident gets an answer. Nobody gets a dashboard.</span>
+      </div>
+
+      <div style="color:#3b82f6;font-weight:700;padding:20px 0;">4</div>
+      <div style="padding:20px 0;">
+        <strong style="color:#1e293b;">Elected officials see what no department will show them.</strong><br>
+        <span style="color:#94a3b8;">The District Scorecard forces the question: "Why does District 3 bear 34% of repeat failures with 19% of businesses — and what are we doing about it?"</span>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+
+<!-- SLIDE 8: Who Gets What — User Interactions -->
+<div class="slide" id="s8">
+  <h3>Who Gets What</h3>
+  <div style="font-size:13px;color:#94a3b8;margin-bottom:20px;">Five users. Five channels. Every output tailored by the Advisor agent.</div>
+
+  <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;font-size:12px;">
+
+    <!-- County Health Officer -->
+    <div style="border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;">
+      <div style="background:#fff1f2;padding:10px 12px;border-bottom:1px solid #e2e8f0;">
+        <div style="color:#dc2626;font-weight:700;font-size:13px;">County Health Officer</div>
+        <div style="margin-top:4px;display:inline-block;background:#fee2e2;color:#dc2626;font-size:10px;padding:2px 8px;border-radius:4px;">📧 Email · Monday 8:00 AM</div>
+      </div>
+      <div style="padding:10px 12px;background:#ffffff;">
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:10px;font-family:monospace;font-size:11px;line-height:1.6;">
+          <div style="color:#94a3b8;margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid #e2e8f0;">
+            <span style="color:#94a3b8;">From:</span> <span style="color:#475569;">CivicPulse</span><br>
+            <span style="color:#94a3b8;">To:</span> <span style="color:#475569;">Dr. Sarah Chen</span><br>
+            <span style="color:#94a3b8;">Re:</span> <span style="color:#dc2626;">⚠ Weekly Risk Brief — 3 ZIPs flagged</span>
+          </div>
+          <div style="color:#475569;line-height:1.7;">
+            <span style="color:#dc2626;font-weight:600;">ZIP 95122</span> crossed compounding risk threshold.<br><br>
+            <span style="color:#94a3b8;">Risk Score:</span> 82.1/100 (rank #3)<br>
+            <span style="color:#94a3b8;">Repeat offenders:</span> 22 businesses<br>
+            <span style="color:#94a3b8;">Poverty rate:</span> 10.5% ($94K income)<br><br>
+            <span style="color:#16a34a;">Recommendation:</span> Cross-dept surge — DEH + Sheriff + Public Health. Full brief attached.
+          </div>
+        </div>
+        <div style="margin-top:8px;color:#94a3b8;font-size:11px;">She forwards to all three departments with one click. Advisor already drafted the intervention plan.</div>
+      </div>
+    </div>
+
+    <!-- Inspection Supervisor -->
+    <div style="border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;">
+      <div style="background:#fefce8;padding:10px 12px;border-bottom:1px solid #e2e8f0;">
+        <div style="color:#d97706;font-weight:700;font-size:13px;">Inspection Supervisor</div>
+        <div style="margin-top:4px;display:inline-block;background:#fef9c3;color:#d97706;font-size:10px;padding:2px 8px;border-radius:4px;">🖥 Dashboard · 7:30 AM daily</div>
+      </div>
+      <div style="padding:10px 12px;background:#ffffff;">
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:10px;font-size:11px;line-height:1.6;">
+          <div style="color:#94a3b8;font-size:10px;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Priority Queue — Tuesday</div>
+          <div style="padding:8px;background:#fff1f2;border-left:3px solid #dc2626;border-radius:0 4px 4px 0;margin-bottom:6px;">
+            <div style="color:#dc2626;font-weight:600;">1. Banh Mi Oven</div>
+            <div style="color:#94a3b8;">95122 · 9 Red · 23 critical</div>
+            <div style="color:#475569;margin-top:4px;font-size:10px;">Pre-visit: focus on temp control &amp; TPHC — 7 of 9 prior failures</div>
+          </div>
+          <div style="padding:8px;background:#f8fafc;border-left:3px solid #d97706;border-radius:0 4px 4px 0;margin-bottom:6px;">
+            <div style="color:#d97706;font-weight:600;">2. Mariscos Playa Azul</div>
+            <div style="color:#94a3b8;">95116 · 4 Red · 16 critical</div>
+          </div>
+          <div style="padding:8px;background:#f8fafc;border-left:3px solid #cbd5e1;border-radius:0 4px 4px 0;">
+            <div style="color:#475569;font-weight:600;">3. Tomi Sushi</div>
+            <div style="color:#94a3b8;">95122 · 5 Red · 11 critical</div>
+          </div>
+        </div>
+        <div style="margin-top:8px;color:#94a3b8;font-size:11px;">One-click to assign inspector. Pre-visit brief auto-generated from violation history.</div>
+      </div>
+    </div>
+
+    <!-- Restaurant Owner -->
+    <div style="border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;">
+      <div style="background:#f0fdf4;padding:10px 12px;border-bottom:1px solid #e2e8f0;">
+        <div style="color:#16a34a;font-weight:700;font-size:13px;">Restaurant Owner</div>
+        <div style="margin-top:4px;display:inline-block;background:#dcfce7;color:#16a34a;font-size:10px;padding:2px 8px;border-radius:4px;">💬 SMS · 7 days before inspection</div>
+      </div>
+      <div style="padding:10px 12px;background:#ffffff;">
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:10px;font-size:11px;">
+          <div style="color:#94a3b8;font-size:10px;text-align:center;margin-bottom:8px;">Wed 10:02 AM · (408) 299-2100</div>
+          <div style="background:#e2e8f0;border-radius:12px 12px 12px 4px;padding:8px 10px;margin-bottom:6px;max-width:90%;line-height:1.6;color:#1e293b;">
+            Tomi Sushi inspection is next week. Most likely violations:<br>
+            1. Hot holding temps — calibrate cooler<br>
+            2. Time marking — label all TPHC items<br>
+            3. Handwash sink — stock soap &amp; towels<br>
+            Reply HELP for details.
+          </div>
+          <div style="background:#16a34a;border-radius:12px 12px 4px 12px;padding:8px 10px;margin-left:auto;max-width:60%;line-height:1.5;color:#ffffff;">
+            thanks — what temp?
+          </div>
+          <div style="background:#e2e8f0;border-radius:12px 12px 12px 4px;padding:8px 10px;margin-top:6px;max-width:90%;color:#1e293b;line-height:1.6;">
+            Cold holding must stay at 41°F or below. Yours was 46°F in July 2025. Check thermostat and door seals.
+          </div>
+        </div>
+        <div style="margin-top:8px;color:#94a3b8;font-size:11px;">Two-way SMS. Owner asks follow-ups, agent answers from inspection history.</div>
+      </div>
+    </div>
+
+    <!-- Resident -->
+    <div style="border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;">
+      <div style="background:#eff6ff;padding:10px 12px;border-bottom:1px solid #e2e8f0;">
+        <div style="color:#2563eb;font-weight:700;font-size:13px;">Community Resident</div>
+        <div style="margin-top:4px;display:inline-block;background:#dbeafe;color:#2563eb;font-size:10px;padding:2px 8px;border-radius:4px;">🌐 Public website · any time</div>
+      </div>
+      <div style="padding:10px 12px;background:#ffffff;">
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;font-size:11px;overflow:hidden;">
+          <div style="background:#e2e8f0;padding:6px 10px;color:#64748b;font-size:10px;">civicpulse.scc.gov/check</div>
+          <div style="padding:10px;">
+            <div style="background:#dbeafe;border-radius:12px 12px 4px 12px;padding:7px 10px;margin-left:auto;max-width:80%;color:#1e40af;margin-bottom:6px;">
+              is banh mi oven safe?
+            </div>
+            <div style="background:#f1f5f9;border-radius:4px 12px 12px 12px;padding:8px 10px;max-width:95%;color:#1e293b;line-height:1.6;margin-bottom:6px;">
+              <span style="color:#dc2626;font-weight:600;">Banh Mi Oven</span> has failed 9 of 13 inspections, 23 critical violations.<br><br>
+              <span style="color:#16a34a;">Nearby alternatives:</span><br>
+              · Lee's Sandwiches (0.3mi) — Green<br>
+              · Pho 69 (0.5mi) — Green
+            </div>
+            <div style="border:1px solid #e2e8f0;border-radius:6px;padding:6px 10px;color:#94a3b8;">Ask about any restaurant…</div>
+          </div>
+        </div>
+        <div style="margin-top:8px;color:#94a3b8;font-size:11px;">No login required. Powered by Advisor with live inspection data.</div>
+      </div>
+    </div>
+
+    <!-- County Supervisor -->
+    <div style="border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;">
+      <div style="background:#faf5ff;padding:10px 12px;border-bottom:1px solid #e2e8f0;">
+        <div style="color:#7c3aed;font-weight:700;font-size:13px;">County Supervisor</div>
+        <div style="margin-top:4px;display:inline-block;background:#ede9fe;color:#7c3aed;font-size:10px;padding:2px 8px;border-radius:4px;">📊 PDF Report · monthly</div>
+      </div>
+      <div style="padding:10px 12px;background:#ffffff;">
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:10px;font-size:11px;line-height:1.6;">
+          <div style="color:#7c3aed;font-weight:700;font-size:12px;margin-bottom:4px;">District 3 Scorecard — March 2026</div>
+          <div style="color:#94a3b8;font-size:10px;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid #e2e8f0;">Prepared by CivicPulse · Confidential</div>
+          <div style="color:#dc2626;margin-bottom:6px;font-weight:600;">⚠ 3 of county's top 10 risk ZIPs are in your district</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:8px;">
+            <div style="color:#94a3b8;">Red inspections:</div><div style="color:#dc2626;font-weight:600;">234 (29% of county)</div>
+            <div style="color:#94a3b8;">Repeat offenders:</div><div style="color:#dc2626;font-weight:600;">55 (34% of county)</div>
+            <div style="color:#94a3b8;">Median income:</div><div style="color:#d97706;">$95K vs $153K county</div>
+          </div>
+          <div style="background:#f0fdf4;border-left:2px solid #16a34a;padding:6px 8px;color:#15803d;font-size:10px;border-radius:0 4px 4px 0;">
+            Board talking point: "District 3 bears 34% of repeat failures with 19% of restaurants."
+          </div>
+        </div>
+        <div style="margin-top:8px;color:#94a3b8;font-size:11px;">Monthly PDF + dashboard. Board-ready language auto-generated by Advisor.</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- SLIDE 10: Who Uses It — Timeline -->
+<div class="slide" id="s10">
+  <h3>A Week with CivicPulse</h3>
+  <div class="spacer"></div>
+  <div style="display:grid; grid-template-columns: 80px 1fr; gap: 0; font-size:17px;">
+
+    <div style="color:#3b82f6;font-weight:600;padding:16px 0;border-bottom:1px solid #e2e8f0;">MON<br><span style="font-size:12px;color:#475569;">6:00 AM</span></div>
+    <div style="padding:16px 20px;border-bottom:1px solid #e2e8f0;">
+      <strong style="color:#1e293b;">Sentinel agent</strong> <span style="color:#475569;">completes overnight scan of all datasets</span><br>
+      <span style="color:#94a3b8;">Flags: "ZIP 95122 crossed compounding risk threshold — 3 new Red inspections this week + crime spike on Story Rd"</span>
+    </div>
+
+    <div style="color:#3b82f6;font-weight:600;padding:16px 0;border-bottom:1px solid #e2e8f0;">MON<br><span style="font-size:12px;color:#475569;">8:00 AM</span></div>
+    <div style="padding:16px 20px;border-bottom:1px solid #e2e8f0;">
+      <strong style="color:#ef4444;">County Health Officer</strong> <span style="color:#475569;">opens Weekly Risk Brief in her inbox</span><br>
+      <span style="color:#94a3b8;">Reads Analyst deep-dive on 95122. Forwards intervention plan to DEH + Sheriff + Public Health leads.</span>
+    </div>
+
+    <div style="color:#3b82f6;font-weight:600;padding:16px 0;border-bottom:1px solid #e2e8f0;">TUE<br><span style="font-size:12px;color:#475569;">7:30 AM</span></div>
+    <div style="padding:16px 20px;border-bottom:1px solid #e2e8f0;">
+      <strong style="color:#eab308;">Inspection Supervisor</strong> <span style="color:#475569;">opens daily priority queue</span><br>
+      <span style="color:#94a3b8;">Banh Mi Oven is #1 (9 prior Red, food-insecure zip). Assigns senior inspector. Pre-visit brief: "Focus on temperature control and TPHC — their top 2 failure modes."</span>
+    </div>
+
+    <div style="color:#3b82f6;font-weight:600;padding:16px 0;border-bottom:1px solid #e2e8f0;">WED<br><span style="font-size:12px;color:#475569;">10:00 AM</span></div>
+    <div style="padding:16px 20px;border-bottom:1px solid #e2e8f0;">
+      <strong style="color:#22c55e;">Restaurant Owner</strong> <span style="color:#475569;">(Tomi Sushi) receives coaching message</span><br>
+      <span style="color:#94a3b8;">"Your inspection is next week. Your 3 most likely violations: (1) Hot holding temps — calibrate reach-in cooler. (2) Time marking — label all TPHC items. (3) Handwash sink — stock soap and towels."</span>
+    </div>
+
+    <div style="color:#3b82f6;font-weight:600;padding:16px 0;border-bottom:1px solid #e2e8f0;">THU<br><span style="font-size:12px;color:#475569;">anytime</span></div>
+    <div style="padding:16px 20px;border-bottom:1px solid #e2e8f0;">
+      <strong style="color:#7c3aed;">Resident</strong> <span style="color:#475569;">asks: "Is it safe to eat at Banh Mi Oven?"</span><br>
+      <span style="color:#94a3b8;">Agent: "This restaurant has failed 9 of its last inspections with 23 critical violations, primarily temperature control. We recommend choosing an alternative. Here are 5 Green-rated restaurants within a mile."</span>
+    </div>
+
+    <div style="color:#3b82f6;font-weight:600;padding:16px 0;">FRI<br><span style="font-size:12px;color:#475569;">5:00 PM</span></div>
+    <div style="padding:16px 20px;">
+      <strong style="color:#3b82f6;">County Supervisor</strong> <span style="color:#475569;">receives monthly District Scorecard</span><br>
+      <span style="color:#94a3b8;">"District 7 has 3 of the county's top 10 compounding-risk zip codes. Recommend $X allocation for targeted intervention." Uses it in next board meeting.</span>
+    </div>
+
+  </div>
+</div>
+
+
+
+
+
+
+<!-- SLIDE 14: Close (Minimalist) -->
+<div class="slide" id="s14">
+  <div style="max-width:800px;">
+    <div style="width:40px;height:3px;background:#ef4444;margin-bottom:48px;"></div>
+    <h1 style="font-size:52px;font-weight:300;line-height:1.3;color:#1e293b;">
+      The data has always known<br>which neighborhoods need help.<br>
+      <span style="font-weight:600;color:#0f172a;">Now it has a voice.</span>
+    </h1>
+    <div style="margin-top:56px;padding-top:32px;border-top:1px solid #1e293b;">
+      <p style="font-size:20px;color:#64748b;font-weight:500;letter-spacing:3px;text-transform:uppercase;">CivicPulse</p>
+      <p style="font-size:16px;color:#475569;margin-top:8px;">Four agents · Six datasets · One GB10 · NVIDIA Human Impact Track</p>
+      <p style="font-size:16px;color:#475569;margin-top:4px;">Johnny Chung</p>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- APPENDIX SLIDES -->
+
+<!-- APPENDIX TOC -->
+<div class="slide" id="sa_toc">
+  <h3>Appendix</h3>
+  <div class="spacer"></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:32px;font-size:17px;">
+    <div>
+      <div style="color:#475569;font-size:12px;text-transform:uppercase;letter-spacing:2px;margin-bottom:14px;">Supporting Detail</div>
+      <div style="display:grid;gap:8px;">
+        <div style="padding:10px 14px;border:1px solid #e2e8f0;border-radius:6px;color:#94a3b8;"><span style="color:#3b82f6;font-weight:600;margin-right:10px;">A</span>System Architecture</div>
+        <div style="padding:10px 14px;border:1px solid #e2e8f0;border-radius:6px;color:#94a3b8;"><span style="color:#3b82f6;font-weight:600;margin-right:10px;">B</span>Data Pipeline &amp; Join Logic</div>
+        <div style="padding:10px 14px;border:1px solid #e2e8f0;border-radius:6px;color:#94a3b8;"><span style="color:#3b82f6;font-weight:600;margin-right:10px;">C</span>Agent Specifications</div>
+        <div style="padding:10px 14px;border:1px solid #e2e8f0;border-radius:6px;color:#94a3b8;"><span style="color:#3b82f6;font-weight:600;margin-right:10px;">D</span>Agent Communication Flow</div>
+        <div style="padding:10px 14px;border:1px solid #e2e8f0;border-radius:6px;color:#94a3b8;"><span style="color:#3b82f6;font-weight:600;margin-right:10px;">E</span>Requirements</div>
+        <div style="padding:10px 14px;border:1px solid #e2e8f0;border-radius:6px;color:#94a3b8;"><span style="color:#3b82f6;font-weight:600;margin-right:10px;">F</span>Data Dictionary</div>
+        <div style="padding:10px 14px;border:1px solid #e2e8f0;border-radius:6px;color:#94a3b8;"><span style="color:#3b82f6;font-weight:600;margin-right:10px;">G</span>Risk Scoring Methodology</div>
+        <div style="padding:10px 14px;border:1px solid #e2e8f0;border-radius:6px;color:#94a3b8;"><span style="color:#3b82f6;font-weight:600;margin-right:10px;">H</span>Top 5 ZIP Code Raw Data</div>
+        <div style="padding:10px 14px;border:1px solid #16a34a;border-radius:6px;color:#1e293b;background:#f0fdf4;"><span style="color:#22c55e;font-weight:600;margin-right:10px;">N</span>Agent Architecture Deep Dive <span style="color:#22c55e;font-size:12px;">← technical</span></div>
+        <div style="padding:10px 14px;border:1px solid #e2e8f0;border-radius:6px;color:#94a3b8;"><span style="color:#3b82f6;font-weight:600;margin-right:10px;">I</span>Why Agents, Not Scripts</div>
+        <div style="padding:10px 14px;border:1px solid #e2e8f0;border-radius:6px;color:#94a3b8;"><span style="color:#3b82f6;font-weight:600;margin-right:10px;">J</span>Technical Architecture</div>
+        <div style="padding:10px 14px;border:1px solid #e2e8f0;border-radius:6px;color:#94a3b8;"><span style="color:#3b82f6;font-weight:600;margin-right:10px;">K</span>District Scorecard</div>
+        <div style="padding:10px 14px;border:1px solid #e2e8f0;border-radius:6px;color:#94a3b8;"><span style="color:#3b82f6;font-weight:600;margin-right:10px;">L</span>Recommended Actions</div>
+        <div style="padding:10px 14px;border:1px solid #e2e8f0;border-radius:6px;color:#94a3b8;"><span style="color:#3b82f6;font-weight:600;margin-right:10px;">M</span>Year 1 Impact Projections</div>
+        <div style="padding:10px 14px;border:1px solid #e2e8f0;border-radius:6px;color:#94a3b8;"><span style="color:#3b82f6;font-weight:600;margin-right:10px;">N</span>Agent Architecture Deep Dive</div>
+        <div style="padding:10px 14px;border:1px solid #e2e8f0;border-radius:6px;color:#94a3b8;"><span style="color:#3b82f6;font-weight:600;margin-right:10px;">O</span>Full Software Stack</div>
+        <div style="padding:10px 14px;border:1px solid #e2e8f0;border-radius:6px;color:#94a3b8;"><span style="color:#3b82f6;font-weight:600;margin-right:10px;">P</span>What's Next</div>
+        <div style="padding:10px 14px;border:1px solid #e2e8f0;border-radius:6px;color:#94a3b8;"><span style="color:#3b82f6;font-weight:600;margin-right:10px;">Q</span>User Interactions by Channel</div>
+        <div style="padding:10px 14px;border:1px solid #e2e8f0;border-radius:6px;color:#94a3b8;"><span style="color:#3b82f6;font-weight:600;margin-right:10px;">R</span>Full System Architecture</div>
+        <div style="padding:10px 14px;border:1px solid #22c55e;border-radius:6px;color:#1e293b;background:#f0fdf4;"><span style="color:#16a34a;font-weight:600;margin-right:10px;">S</span>User &amp; Agent Guides (S1–S9) <span style="color:#16a34a;font-size:12px;">← new</span></div>
+      </div>
+    </div>
+    <div>
+      <div style="color:#475569;font-size:12px;text-transform:uppercase;letter-spacing:2px;margin-bottom:14px;">Background / Discardable</div>
+      <div style="display:grid;gap:8px;">
+        <div style="padding:10px 14px;border:1px solid #e2e8f0;border-radius:6px;color:#64748b;"><span style="color:#475569;font-weight:600;margin-right:10px;">2A</span>Health Equity Context<br><span style="font-size:13px;">Pre-existing public health finding — not derived from the data join</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+
+<!-- APPENDIX A: System Architecture Diagram -->
+<div class="slide" id="sa1">
+  <h3>Appendix A — System Architecture</h3>
+  <div class="spacer"></div>
+  <div style="font-family:monospace; font-size:15px; line-height:1.8; color:#94a3b8; background:#f8fafc; padding:30px; border-radius:12px; border:1px solid #e2e8f0;">
+<pre style="color:#94a3b8;">
+<span style="color:#64748b;">┌──────────────────────────────────────────────────────────────────────────────────┐</span>
+<span style="color:#64748b;">│</span>  <span style="color:#1e293b;font-weight:bold;">NVIDIA DGX Spark (GB10)</span> — 128GB Unified Memory, Grace Blackwell, ARM64       <span style="color:#64748b;">│</span>
+<span style="color:#64748b;">├──────────────────────────────────────────────────────────────────────────────────┤</span>
+<span style="color:#64748b;">│</span>                                                                                <span style="color:#64748b;">│</span>
+<span style="color:#64748b;">│</span>  <span style="color:#3b82f6;">┌─────────────┐</span>   <span style="color:#22c55e;">┌──────────────┐</span>   <span style="color:#eab308;">┌──────────────┐</span>                   <span style="color:#64748b;">│</span>
+<span style="color:#64748b;">│</span>  <span style="color:#3b82f6;">│ DATA LAYER  │</span>   <span style="color:#22c55e;">│ MODEL LAYER  │</span>   <span style="color:#eab308;">│ AGENT LAYER  │</span>                   <span style="color:#64748b;">│</span>
+<span style="color:#64748b;">│</span>  <span style="color:#3b82f6;">│             │</span>   <span style="color:#22c55e;">│              │</span>   <span style="color:#eab308;">│  (OpenClaw)  │</span>                   <span style="color:#64748b;">│</span>
+<span style="color:#64748b;">│</span>  <span style="color:#3b82f6;">│ Crime  260K │</span>   <span style="color:#22c55e;">│ Nemotron 70B │</span>   <span style="color:#eab308;">│              │</span>  <span style="color:#7c3aed;">┌────────────┐</span> <span style="color:#64748b;">│</span>
+<span style="color:#64748b;">│</span>  <span style="color:#3b82f6;">│ Food    95K │</span>──▶<span style="color:#22c55e;">│  (42GB,Deep) │</span>◀──<span style="color:#eab308;">│ Sentinel    │</span>──▶<span style="color:#7c3aed;">│  GRADIO UI │</span> <span style="color:#64748b;">│</span>
+<span style="color:#64748b;">│</span>  <span style="color:#3b82f6;">│ EEO    26K │</span>   <span style="color:#22c55e;">│              │</span>   <span style="color:#eab308;">│ Analyst     │</span>  <span style="color:#7c3aed;">│            │</span> <span style="color:#64748b;">│</span>
+<span style="color:#64748b;">│</span>  <span style="color:#3b82f6;">│ Census  62 │</span>   <span style="color:#22c55e;">│ Nemotron     │</span>   <span style="color:#eab308;">│ Advisor     │</span>  <span style="color:#7c3aed;">│ Maps       │</span> <span style="color:#64748b;">│</span>
+<span style="color:#64748b;">│</span>  <span style="color:#3b82f6;">│ CDC    16K │</span>──▶<span style="color:#22c55e;">│  Nano (Fast) │</span>◀──<span style="color:#eab308;">│ Messenger   │</span>──▶<span style="color:#7c3aed;">│ Agent Log  │</span> <span style="color:#64748b;">│</span>
+<span style="color:#64748b;">│</span>  <span style="color:#3b82f6;">│ Photos  5K │</span>   <span style="color:#22c55e;">│              │</span>   <span style="color:#eab308;">│             │</span>  <span style="color:#7c3aed;">│ Outputs    │</span> <span style="color:#64748b;">│</span>
+<span style="color:#64748b;">│</span>  <span style="color:#3b82f6;">└─────────────┘</span>   <span style="color:#22c55e;">└──────────────┘</span>   <span style="color:#eab308;">└──────────────┘</span>  <span style="color:#7c3aed;">└────────────┘</span> <span style="color:#64748b;">│</span>
+<span style="color:#64748b;">│</span>                                                                                <span style="color:#64748b;">│</span>
+<span style="color:#64748b;">│</span>  <span style="color:#475569;">Ollama :11434          OpenAI-compat API        OpenClaw Engine       :7860</span>  <span style="color:#64748b;">│</span>
+<span style="color:#64748b;">└──────────────────────────────────────────────────────────────────────────────────┘</span>
+</pre>
+  </div>
+  <div class="spacer"></div>
+  <p>Everything runs on a single GB10. No cloud dependencies. No data leaves the machine. Unified memory means zero-copy data sharing between CPU processing and GPU inference.</p>
+</div>
+
+<!-- APPENDIX B: Data Pipeline Detail -->
+<div class="slide" id="sa2">
+  <h3>Appendix B — Data Pipeline & Join Logic</h3>
+  <div class="spacer"></div>
+  <div class="two-col">
+    <div>
+      <h2>Geographic Join Strategy</h2>
+      <div class="spacer"></div>
+      <div style="font-family:monospace;font-size:14px;line-height:2;color:#94a3b8;background:#f8fafc;padding:24px;border-radius:12px;border:1px solid #e2e8f0;">
+        Food Businesses (8,588)<br>
+        &nbsp;&nbsp;├── <span style="color:#22c55e;">lat/lon</span> → zip code → <span style="color:#3b82f6;">Census income/poverty</span><br>
+        &nbsp;&nbsp;├── <span style="color:#22c55e;">lat/lon</span> → tract FIPS → <span style="color:#3b82f6;">CDC health outcomes</span><br>
+        &nbsp;&nbsp;├── <span style="color:#22c55e;">address</span> → street norm → <span style="color:#ef4444;">Crime incidents</span><br>
+        &nbsp;&nbsp;└── <span style="color:#22c55e;">business_id</span> → inspections → violations<br>
+        <br>
+        Crime Reports (259,660)<br>
+        &nbsp;&nbsp;├── <span style="color:#eab308;">address</span> → "NNN Block STREET" → street norm<br>
+        &nbsp;&nbsp;└── street norm → matched to food biz streets<br>
+        <br>
+        <span style="color:#1e293b;">Result: unified risk profile per zip code</span><br>
+        &nbsp;&nbsp;├── food safety: violations, Red count, critical count<br>
+        &nbsp;&nbsp;├── crime: incidents on food streets<br>
+        &nbsp;&nbsp;├── economic: poverty rate, median income<br>
+        &nbsp;&nbsp;└── health: diabetes, obesity, food insecurity
+      </div>
+    </div>
+    <div>
+      <h2>Key Metrics Per Zip</h2>
+      <div class="spacer"></div>
+      <table class="data-table" style="font-size:15px;">
+        <tr><th>Metric</th><th>Source</th><th>Type</th></tr>
+        <tr><td>Total businesses</td><td>Food Biz</td><td>Count</td></tr>
+        <tr><td>Red inspections</td><td>Food Insp</td><td>Count</td></tr>
+        <tr><td>Critical violations</td><td>Food Viol</td><td>Count</td></tr>
+        <tr><td>Avg critical per biz</td><td>Computed</td><td>Rate</td></tr>
+        <tr><td>Crime on food streets</td><td>Crime</td><td>Count</td></tr>
+        <tr><td>Crime per business</td><td>Computed</td><td>Rate</td></tr>
+        <tr><td>Poverty rate %</td><td>Census</td><td>%</td></tr>
+        <tr><td>Median income</td><td>Census</td><td>$</td></tr>
+        <tr><td>Food insecurity %</td><td>CDC</td><td>%</td></tr>
+        <tr><td>Diabetes %</td><td>CDC</td><td>%</td></tr>
+        <tr><td>Obesity %</td><td>CDC</td><td>%</td></tr>
+        <tr><td>Mental distress %</td><td>CDC</td><td>%</td></tr>
+      </table>
+      <div class="spacer"></div>
+      <p class="small">Composite risk score = weighted rank across food safety (25%), poverty (25%), crime (25%), Red inspections (25%)</p>
+    </div>
+  </div>
+</div>
+
+<!-- APPENDIX C: Agent Specifications -->
+<div class="slide" id="sa3">
+  <h3>Appendix C — Agent Specifications</h3>
+  <div class="spacer"></div>
+  <div class="two-col">
+    <div>
+      <div class="card" style="margin-bottom:16px;border-left:3px solid #16a34a;">
+        <h4>SENTINEL — Fast Triage</h4>
+        <p style="font-size:14px;"><strong>Model:</strong> Nemotron Nano (3B active, MoE)<br>
+        <strong>Input:</strong> All datasets, pre-computed risk scores<br>
+        <strong>Output:</strong> Flagged patterns with preliminary severity (1-5)<br>
+        <strong>Decision:</strong> "Is this worth investigating?" — filters noise from signal<br>
+        <strong>Latency target:</strong> &lt;5s per scan<br>
+        <strong>Trigger:</strong> Nightly batch + real-time on new inspection results</p>
+      </div>
+      <div class="card" style="border-left:3px solid #7c3aed;">
+        <h4>ANALYST — Deep Reasoning</h4>
+        <p style="font-size:14px;"><strong>Model:</strong> Nemotron 70B (full, 128K context)<br>
+        <strong>Input:</strong> Sentinel flags + full cross-silo data for flagged area<br>
+        <strong>Output:</strong> Severity assessment, root cause hypothesis, affected population, recommended intervention<br>
+        <strong>Decision:</strong> "How bad is this? Why? Who's affected?"<br>
+        <strong>Latency target:</strong> 30-60s per analysis<br>
+        <strong>Context:</strong> Fed zip-level stats, top violators, health outcomes, crime patterns, census demographics</p>
+      </div>
+    </div>
+    <div>
+      <div class="card" style="margin-bottom:16px;border-left:3px solid #2563eb;">
+        <h4>ADVISOR — Action Generator</h4>
+        <p style="font-size:14px;"><strong>Model:</strong> Nemotron 70B<br>
+        <strong>Input:</strong> Analyst findings + recipient profile<br>
+        <strong>Output:</strong> Tailored action plan per recipient type<br>
+        <strong>Decision:</strong> "What should this specific person DO?"<br>
+        <strong>Output types:</strong><br>
+        &nbsp;&nbsp;• Health Officer: strategic brief with intervention plan<br>
+        &nbsp;&nbsp;• Supervisor: prioritized queue with pre-visit briefs<br>
+        &nbsp;&nbsp;• Owner: plain-language checklist with specific fixes<br>
+        &nbsp;&nbsp;• Resident: conversational safety guidance<br>
+        &nbsp;&nbsp;• Elected official: scorecard with talking points</p>
+      </div>
+      <div class="card" style="border-left:3px solid #eab308;">
+        <h4>MESSENGER — Routing & Delivery</h4>
+        <p style="font-size:14px;"><strong>Model:</strong> Nemotron Nano<br>
+        <strong>Input:</strong> Advisor outputs + urgency level + routing rules<br>
+        <strong>Output:</strong> Formatted, delivered messages<br>
+        <strong>Decision:</strong> "Who gets this, when, and how?"<br>
+        <strong>Channels:</strong> Dashboard, email digest, SMS alert, PDF report<br>
+        <strong>Tracking:</strong> Delivery confirmation, open/read status, follow-up scheduling</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- APPENDIX D: OpenClaw Agent Communication -->
+<div class="slide" id="sa4">
+  <h3>Appendix D — Agent Communication Flow</h3>
+  <div class="spacer"></div>
+  <h2>Context passing between agents — not just sequential, but decision-driven</h2>
+  <div class="spacer"></div>
+  <div style="font-family:monospace;font-size:14px;line-height:1.7;color:#94a3b8;background:#f8fafc;padding:30px;border-radius:12px;border:1px solid #e2e8f0;">
+<pre style="color:#94a3b8;">
+<span style="color:#22c55e;">[07:00:01] SENTINEL</span> Scanning 62 zip codes...
+<span style="color:#22c55e;">[07:00:04] SENTINEL</span> 95122: risk_score=80.9 (above threshold 70) <span style="color:#ef4444;">→ FLAGGED</span>
+<span style="color:#22c55e;">[07:00:04] SENTINEL</span> 95113: risk_score=84.7 (above threshold 70) <span style="color:#ef4444;">→ FLAGGED</span>
+<span style="color:#22c55e;">[07:00:05] SENTINEL</span> 95112: risk_score=83.5 (above threshold 70) <span style="color:#ef4444;">→ FLAGGED</span>
+<span style="color:#22c55e;">[07:00:05] SENTINEL</span> Scan complete. 3 flags. Passing to Analyst.
+
+<span style="color:#7c3aed;">[07:00:06] ANALYST</span> Received 3 flags from Sentinel.
+<span style="color:#7c3aed;">[07:00:06] ANALYST</span> Loading cross-silo data for ZIP 95122...
+<span style="color:#7c3aed;">[07:00:08] ANALYST</span> Context: 341 businesses, 100 Red, 683 critical, poverty 10.5%,
+                   food insecurity 14.2%, diabetes 12.1%, 4187 crime incidents
+<span style="color:#7c3aed;">[07:00:35] ANALYST</span> Assessment: CRITICAL. Compounding risk across food safety,
+                   economic vulnerability, and health outcomes. 4 repeat offenders.
+                   Root cause: under-resourced inspection in high-need area.
+<span style="color:#7c3aed;">[07:00:36] ANALYST</span> Passing to Advisor with severity=CRITICAL, recipients=4.
+
+<span style="color:#3b82f6;">[07:00:37] ADVISOR</span> Generating outputs for 4 recipients...
+<span style="color:#3b82f6;">[07:01:02] ADVISOR</span> ✓ Health Officer brief: cross-department intervention plan
+<span style="color:#3b82f6;">[07:01:28] ADVISOR</span> ✓ Inspection Supervisor: priority queue (Banh Mi Oven #1)
+<span style="color:#3b82f6;">[07:01:55] ADVISOR</span> ✓ Restaurant Owner (Tomi Sushi): coaching checklist
+<span style="color:#3b82f6;">[07:02:10] ADVISOR</span> ✓ Resident profile: neighborhood safety summary
+<span style="color:#3b82f6;">[07:02:10] ADVISOR</span> Passing 4 outputs to Messenger.
+
+<span style="color:#eab308;">[07:02:11] MESSENGER</span> Routing...
+<span style="color:#eab308;">[07:02:11] MESSENGER</span> Health Officer brief → <span style="color:#ef4444;">IMMEDIATE</span> (email + dashboard)
+<span style="color:#eab308;">[07:02:12] MESSENGER</span> Inspection queue → <span style="color:#eab308;">MORNING</span> (dashboard, ready for 7:30 AM)
+<span style="color:#eab308;">[07:02:12] MESSENGER</span> Owner coaching → <span style="color:#22c55e;">SCHEDULED</span> (SMS Wednesday 10 AM)
+<span style="color:#eab308;">[07:02:13] MESSENGER</span> Resident profile → <span style="color:#3b82f6;">ON-DEMAND</span> (available in chat UI)
+<span style="color:#eab308;">[07:02:13] MESSENGER</span> All outputs delivered. Follow-up scheduled.
+</pre>
+  </div>
+</div>
+
+<!-- APPENDIX E: Requirements -->
+<div class="slide" id="sa5">
+  <h3>Appendix E — Requirements & Scope</h3>
+  <div class="spacer"></div>
+  <div class="two-col">
+    <div>
+      <h2>Functional Requirements</h2>
+      <div class="spacer"></div>
+      <table class="data-table" style="font-size:15px;">
+        <tr><th>#</th><th>Requirement</th><th>Priority</th></tr>
+        <tr><td>F1</td><td>Ingest and join 6 primary + 2 supplemental datasets by geography</td><td><span class="badge green">P0</span></td></tr>
+        <tr><td>F2</td><td>Compute composite risk score per zip code</td><td><span class="badge green">P0</span></td></tr>
+        <tr><td>F3</td><td>Sentinel agent: scan all zips, flag above threshold</td><td><span class="badge green">P0</span></td></tr>
+        <tr><td>F4</td><td>Analyst agent: deep-dive flagged zips with cross-silo reasoning</td><td><span class="badge green">P0</span></td></tr>
+        <tr><td>F5</td><td>Advisor agent: generate tailored outputs per recipient type</td><td><span class="badge green">P0</span></td></tr>
+        <tr><td>F6</td><td>Messenger agent: route outputs by urgency and channel</td><td><span class="badge amber">P1</span></td></tr>
+        <tr><td>F7</td><td>Gradio UI: map, agent log, output panels</td><td><span class="badge green">P0</span></td></tr>
+        <tr><td>F8</td><td>Resident chat interface: "Is it safe to eat at X?"</td><td><span class="badge amber">P1</span></td></tr>
+        <tr><td>F9</td><td>Pre-computed examples for reliable demo</td><td><span class="badge green">P0</span></td></tr>
+      </table>
+    </div>
+    <div>
+      <h2>Non-Functional Requirements</h2>
+      <div class="spacer"></div>
+      <table class="data-table" style="font-size:15px;">
+        <tr><th>#</th><th>Requirement</th><th>Target</th></tr>
+        <tr><td>N1</td><td>All processing on-device (GB10)</td><td>No cloud calls</td></tr>
+        <tr><td>N2</td><td>Sentinel scan latency</td><td>&lt;10 seconds</td></tr>
+        <tr><td>N3</td><td>Analyst deep-dive latency</td><td>&lt;60 seconds</td></tr>
+        <tr><td>N4</td><td>Full pipeline (scan → outputs)</td><td>&lt;3 minutes</td></tr>
+        <tr><td>N5</td><td>Demo reliability</td><td>3 consecutive runs without failure</td></tr>
+        <tr><td>N6</td><td>Data privacy</td><td>No PII in agent outputs</td></tr>
+      </table>
+      <div class="spacer"></div>
+      <h2>Out of Scope (Hackathon)</h2>
+      <div class="spacer"></div>
+      <ul style="font-size:16px;color:#94a3b8;line-height:2;">
+        <li>Real email/SMS delivery (simulated in demo)</li>
+        <li>Authentication and access control</li>
+        <li>Historical trend analysis (point-in-time only)</li>
+        <li>Real-time data ingestion (batch processing)</li>
+        <li>Mobile interface</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- APPENDIX F: Data Dictionary Summary -->
+<div class="slide" id="sa6">
+  <h3>Appendix F — Data Sources Summary</h3>
+  <div class="spacer"></div>
+  <table class="data-table" style="font-size:15px;">
+    <tr><th>Dataset</th><th>Records</th><th>Time Range</th><th>Key Fields</th><th>Join Key</th></tr>
+    <tr>
+      <td><strong>Crime Reports</strong></td><td>259,660</td><td>Dec 2019 – Mar 2026</td>
+      <td>case_number, datetime, address, type, parent_type</td><td>street name</td>
+    </tr>
+    <tr>
+      <td><strong>Food Businesses</strong></td><td>8,588</td><td>Current snapshot</td>
+      <td>business_id, name, address, city, lat, lon, zip</td><td>business_id, lat/lon, zip</td>
+    </tr>
+    <tr>
+      <td><strong>Food Inspections</strong></td><td>21,895</td><td>Mar 2024 – Mar 2026</td>
+      <td>inspection_id, business_id, date, score, result (G/Y/R)</td><td>business_id, inspection_id</td>
+    </tr>
+    <tr>
+      <td><strong>Food Violations</strong></td><td>64,364</td><td>Mar 2024 – Mar 2026</td>
+      <td>inspection_id, description, code, critical (bool), comment</td><td>inspection_id</td>
+    </tr>
+    <tr>
+      <td><strong>EEO Employees</strong></td><td>26,042</td><td>Current snapshot</td>
+      <td>gender, ethnicity, department, job group, employment status</td><td>department</td>
+    </tr>
+    <tr>
+      <td><strong>Photographers</strong></td><td>4,541</td><td>1950 – 1993</td>
+      <td>date, subject, department, color/B&W, media counts</td><td>department</td>
+    </tr>
+    <tr style="background:#f1f5f9;">
+      <td><strong>Census ACS</strong> <span class="badge green">supp</span></td><td>62 zips</td><td>2022</td>
+      <td>median_income, poverty_pop, total_pop</td><td>zip code</td>
+    </tr>
+    <tr style="background:#f1f5f9;">
+      <td><strong>CDC PLACES</strong> <span class="badge green">supp</span></td><td>16,320</td><td>2023</td>
+      <td>40 health measures by tract (diabetes, obesity, food insecurity...)</td><td>census tract FIPS</td>
+    </tr>
+  </table>
+  <div class="spacer"></div>
+  <div class="highlight blue">
+    <p><strong>Total records under management:</strong> ~401,000 across 8 datasets, joined by geography (zip, tract, street, lat/lon)</p>
+  </div>
+</div>
+
+<!-- APPENDIX G: Risk Scoring Methodology -->
+<div class="slide" id="sa7">
+  <h3>Appendix G — Compounding Risk Score Methodology</h3>
+  <div class="spacer"></div>
+  <div class="two-col">
+    <div>
+      <h2>Composite Risk Score</h2>
+      <div class="spacer"></div>
+      <p>Each zip code is ranked on 4 dimensions. The composite score is the weighted sum of percentile ranks:</p>
+      <div class="spacer"></div>
+      <div style="font-family:monospace;font-size:18px;line-height:2.2;color:#1e293b;background:#f8fafc;padding:24px;border-radius:12px;border:1px solid #e2e8f0;">
+        risk_score =<br>
+        &nbsp;&nbsp;<span style="color:#ef4444;">avg_critical_violations.rank(pct)</span> × 25<br>
+        + <span style="color:#eab308;">poverty_rate.rank(pct)</span> × 25<br>
+        + <span style="color:#7c3aed;">crime_per_business.rank(pct)</span> × 25<br>
+        + <span style="color:#3b82f6;">total_red_inspections.rank(pct)</span> × 25<br>
+        <br>
+        <span style="color:#64748b;">Range: 0–100. Threshold for alert: 70+</span>
+      </div>
+      <div class="spacer"></div>
+      <p class="small">Equal weighting ensures no single dimension dominates. The power is in the combination — a zip must be failing across multiple dimensions to trigger an alert.</p>
+    </div>
+    <div>
+      <h2>Top 10 Compounding Risk Zips</h2>
+      <div class="spacer"></div>
+      <table class="data-table" style="font-size:15px;">
+        <tr><th>ZIP</th><th>Score</th><th>Red</th><th>Critical</th><th>Poverty</th></tr>
+        <tr><td><strong>95113</strong></td><td><span style="color:#ef4444;">84.7</span></td><td>41</td><td>359</td><td>18.8%</td></tr>
+        <tr><td><strong>95112</strong></td><td><span style="color:#ef4444;">83.5</span></td><td>55</td><td>442</td><td>16.5%</td></tr>
+        <tr><td><strong>95116</strong></td><td><span style="color:#ef4444;">82.4</span></td><td>39</td><td>235</td><td>11.3%</td></tr>
+        <tr><td><strong>95122</strong></td><td><span style="color:#ef4444;">80.9</span></td><td>100</td><td>683</td><td>10.5%</td></tr>
+        <tr><td>95014</td><td><span style="color:#eab308;">75.6</span></td><td>39</td><td>480</td><td>5.1%</td></tr>
+        <tr><td>95127</td><td><span style="color:#eab308;">70.6</span></td><td>8</td><td>164</td><td>8.1%</td></tr>
+        <tr><td>95111</td><td>68.0</td><td>8</td><td>162</td><td>9.0%</td></tr>
+        <tr><td>95129</td><td>67.8</td><td>15</td><td>313</td><td>4.0%</td></tr>
+        <tr><td>95051</td><td>66.9</td><td>19</td><td>258</td><td>5.6%</td></tr>
+        <tr><td>95148</td><td>66.9</td><td>9</td><td>93</td><td>6.5%</td></tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- APPENDIX H: Top 5 ZIP Code Raw Data -->
+<div class="slide" id="sa8">
+  <h3>Appendix H — Top 5 ZIP Codes: Source Data</h3>
+  <div class="spacer"></div>
+  <p class="small" style="margin-bottom:16px;">All figures derived from SCC DEH food inspection records (March 2026), SJPD Crime Reports, US Census ACS 2022, and CDC PLACES 2023. Composite risk score = percentile rank across 4 normalized signals.</p>
+
+  <!-- Main data table -->
+  <table class="data-table" style="font-size:14px;margin-bottom:24px;">
+    <thead>
+      <tr>
+        <th>ZIP</th>
+        <th>Risk Score</th>
+        <th>Businesses</th>
+        <th>Red Insp.</th>
+        <th>% of County Red</th>
+        <th>Critical Viols.</th>
+        <th>% of County Crit</th>
+        <th>Crit / Biz</th>
+        <th>Repeat Offenders</th>
+        <th>Crime on Food Streets</th>
+        <th>Poverty Rate</th>
+        <th>Median Income</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>95113</strong></td>
+        <td><span class="badge red">83.4</span></td>
+        <td>241</td>
+        <td>41</td>
+        <td>5.1%</td>
+        <td>359</td>
+        <td>3.9%</td>
+        <td style="color:#ef4444;">1.49</td>
+        <td>7</td>
+        <td>4,264</td>
+        <td style="color:#eab308;">18.8%</td>
+        <td>$133,021</td>
+      </tr>
+      <tr>
+        <td><strong>95116</strong></td>
+        <td><span class="badge red">82.9</span></td>
+        <td>176</td>
+        <td>39</td>
+        <td>4.9%</td>
+        <td>235</td>
+        <td>2.5%</td>
+        <td style="color:#ef4444;">1.34</td>
+        <td>10</td>
+        <td>4,080</td>
+        <td style="color:#eab308;">11.3%</td>
+        <td>$81,216</td>
+      </tr>
+      <tr style="background:#fff1f2;">
+        <td><strong style="color:#ef4444;">95122</strong></td>
+        <td><span class="badge red">82.1</span></td>
+        <td>341</td>
+        <td style="color:#ef4444;font-weight:600;">100</td>
+        <td style="color:#ef4444;font-weight:600;">12.5%</td>
+        <td style="color:#ef4444;font-weight:600;">683</td>
+        <td style="color:#ef4444;font-weight:600;">7.4%</td>
+        <td style="color:#ef4444;">2.00</td>
+        <td style="color:#ef4444;font-weight:600;">22</td>
+        <td>4,187</td>
+        <td style="color:#eab308;">10.5%</td>
+        <td>$94,924</td>
+      </tr>
+      <tr>
+        <td><strong>95112</strong></td>
+        <td><span class="badge red">81.5</span></td>
+        <td>348</td>
+        <td>55</td>
+        <td>6.9%</td>
+        <td>442</td>
+        <td>4.8%</td>
+        <td style="color:#ef4444;">1.27</td>
+        <td>10</td>
+        <td style="color:#ef4444;font-weight:600;">7,694</td>
+        <td style="color:#eab308;">16.5%</td>
+        <td>$85,080</td>
+      </tr>
+      <tr>
+        <td><strong>95148</strong></td>
+        <td><span class="badge" style="background:#92400e;color:#fef3c7;">75.7</span></td>
+        <td>66</td>
+        <td>9</td>
+        <td>1.1%</td>
+        <td>93</td>
+        <td>1.0%</td>
+        <td style="color:#eab308;">1.41</td>
+        <td>1</td>
+        <td>1,451</td>
+        <td>6.5%</td>
+        <td>$158,565</td>
+      </tr>
+      <tr style="border-top:2px solid #334155;font-weight:600;color:#94a3b8;">
+        <td>Top 5 Total</td>
+        <td>—</td>
+        <td>1,172 <span style="font-weight:400;color:#64748b;">(14%)</span></td>
+        <td>244 <span style="font-weight:400;color:#ef4444;">(30%)</span></td>
+        <td style="color:#ef4444;">30.5%</td>
+        <td>1,812 <span style="font-weight:400;color:#ef4444;">(20%)</span></td>
+        <td style="color:#ef4444;">19.6%</td>
+        <td>—</td>
+        <td>50 <span style="font-weight:400;color:#ef4444;">(31%)</span></td>
+        <td>21,676</td>
+        <td>—</td>
+        <td>—</td>
+      </tr>
+      <tr style="color:#475569;font-size:12px;">
+        <td>County Total</td>
+        <td>—</td>
+        <td>8,588</td>
+        <td>800</td>
+        <td>100%</td>
+        <td>9,251</td>
+        <td>100%</td>
+        <td>1.08 avg</td>
+        <td>161</td>
+        <td>170,311</td>
+        <td>—</td>
+        <td>$153K median</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Top violators per ZIP -->
+  <h3 style="margin-bottom:12px;">Top Violators by ZIP (from DEH inspection records)</h3>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;gap:12px;font-size:13px;">
+    <div class="card" style="padding:14px;">
+      <div style="color:#3b82f6;font-size:11px;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">95113</div>
+      <div style="color:#1e293b;margin-bottom:4px;">Mosaic Restaurant</div>
+      <div style="color:#94a3b8;">11 critical · 4 Red</div>
+      <div style="color:#1e293b;margin-top:8px;">Teske's Germania</div>
+      <div style="color:#94a3b8;">9 critical · 4 Red</div>
+    </div>
+    <div class="card" style="padding:14px;">
+      <div style="color:#3b82f6;font-size:11px;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">95116</div>
+      <div style="color:#1e293b;margin-bottom:4px;">Mariscos Playa Azul</div>
+      <div style="color:#94a3b8;">16 critical · 4 Red</div>
+      <div style="color:#1e293b;margin-top:8px;">Duc Huong</div>
+      <div style="color:#94a3b8;">11 critical · 0 Red</div>
+    </div>
+    <div class="card" style="padding:14px;border:1px solid #ef444440;">
+      <div style="color:#ef4444;font-size:11px;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">95122 ← Ground Zero</div>
+      <div style="color:#1e293b;margin-bottom:4px;">Banh Mi Oven</div>
+      <div style="color:#ef4444;font-weight:600;">23 critical · 9 Red</div>
+      <div style="color:#1e293b;margin-top:8px;">Los Arcos</div>
+      <div style="color:#94a3b8;">14 critical · 2 Red</div>
+    </div>
+    <div class="card" style="padding:14px;">
+      <div style="color:#3b82f6;font-size:11px;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">95112</div>
+      <div style="color:#1e293b;margin-bottom:4px;">Mariscos Costa Alegre</div>
+      <div style="color:#94a3b8;">11 critical · 0 Red</div>
+      <div style="color:#1e293b;margin-top:8px;">The Fab</div>
+      <div style="color:#94a3b8;">11 critical · 0 Red</div>
+    </div>
+    <div class="card" style="padding:14px;">
+      <div style="color:#3b82f6;font-size:11px;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">95148</div>
+      <div style="color:#1e293b;margin-bottom:4px;">New Hwongkok</div>
+      <div style="color:#94a3b8;">7 critical · 0 Red</div>
+      <div style="color:#1e293b;margin-top:8px;">Manila Oriental Market</div>
+      <div style="color:#94a3b8;">6 critical · 0 Red</div>
+    </div>
+  </div>
+</div>
+
+<!-- APPENDIX N: Agent Architecture Deep Dive -->
+<div class="slide" id="san">
+  <h3>Appendix N — How the Agents Work Together</h3>
+  <div style="font-size:13px;color:#475569;margin-bottom:20px;">OpenClaw orchestration · Nemotron 70B · Context-driven pipeline · NVIDIA DGX Spark</div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:32px;align-items:start;">
+
+    <!-- Left: Agent pipeline with I/O spec -->
+    <div>
+      <div style="font-size:12px;color:#475569;text-transform:uppercase;letter-spacing:2px;margin-bottom:16px;">Pipeline: What each agent receives and produces</div>
+
+      <!-- Sentinel -->
+      <div style="border:1px solid #e2e8f0;border-radius:8px;margin-bottom:10px;overflow:hidden;">
+        <div style="background:#f0fdf4;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;">
+          <span style="color:#22c55e;font-weight:700;font-size:15px;">SENTINEL</span>
+          <span style="color:#475569;font-size:12px;">Nemotron 70B · &lt;10s · constrained output</span>
+        </div>
+        <div style="padding:10px 14px;font-size:13px;font-family:monospace;color:#94a3b8;line-height:1.7;">
+          <span style="color:#475569;">IN:</span> zip_risk.json (92 ZIPs × 12 metrics)<br>
+          <span style="color:#475569;">DECIDES:</span> severity 1–5, flag YES/MONITOR/NO<br>
+          <span style="color:#475569;">OUT:</span> structured flag payload → Analyst
+        </div>
+      </div>
+
+      <div style="text-align:center;color:#94a3b8;font-size:18px;margin:2px 0;">↓ passes flag + full ZIP profile</div>
+
+      <!-- Analyst -->
+      <div style="border:1px solid #e2e8f0;border-radius:8px;margin-bottom:10px;overflow:hidden;">
+        <div style="background:#1a1040;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;">
+          <span style="color:#7c3aed;font-weight:700;font-size:15px;">ANALYST</span>
+          <span style="color:#475569;font-size:12px;">Nemotron 70B · 128K ctx · 30–60s</span>
+        </div>
+        <div style="padding:10px 14px;font-size:13px;font-family:monospace;color:#94a3b8;line-height:1.7;">
+          <span style="color:#475569;">IN:</span> sentinel flag + ZIP profile + county benchmarks<br>
+          <span style="color:#475569;">DECIDES:</span> root cause, affected population, priority<br>
+          <span style="color:#475569;">OUT:</span> severity assessment + action recommendations
+        </div>
+      </div>
+
+      <div style="text-align:center;color:#94a3b8;font-size:18px;margin:2px 0;">↓ passes analysis + recipient list</div>
+
+      <!-- Advisor -->
+      <div style="border:1px solid #e2e8f0;border-radius:8px;margin-bottom:10px;overflow:hidden;">
+        <div style="background:#0f1f35;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;">
+          <span style="color:#3b82f6;font-weight:700;font-size:15px;">ADVISOR</span>
+          <span style="color:#475569;font-size:12px;">Nemotron 70B · tailored per recipient</span>
+        </div>
+        <div style="padding:10px 14px;font-size:13px;font-family:monospace;color:#94a3b8;line-height:1.7;">
+          <span style="color:#475569;">IN:</span> analyst output + recipient profile<br>
+          <span style="color:#475569;">DECIDES:</span> framing, level of detail, action specificity<br>
+          <span style="color:#475569;">OUT:</span> 4 tailored briefs (officer / supervisor / owner / resident)
+        </div>
+      </div>
+
+      <div style="text-align:center;color:#94a3b8;font-size:18px;margin:2px 0;">↓ passes outputs + urgency level</div>
+
+      <!-- Messenger -->
+      <div style="border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;">
+        <div style="background:#1a1400;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;">
+          <span style="color:#eab308;font-weight:700;font-size:15px;">MESSENGER</span>
+          <span style="color:#475569;font-size:12px;">Nemotron 70B · routing + scheduling</span>
+        </div>
+        <div style="padding:10px 14px;font-size:13px;font-family:monospace;color:#94a3b8;line-height:1.7;">
+          <span style="color:#475569;">IN:</span> advisor outputs + urgency flag<br>
+          <span style="color:#475569;">DECIDES:</span> channel (email/SMS/dashboard), timing<br>
+          <span style="color:#475569;">OUT:</span> delivered messages + follow-up schedule
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Context payload + OpenClaw role -->
+    <div>
+      <div style="font-size:12px;color:#475569;text-transform:uppercase;letter-spacing:2px;margin-bottom:16px;">What OpenClaw passes to the Analyst (actual context payload)</div>
+      <div style="font-family:monospace;font-size:12px;line-height:1.7;color:#94a3b8;background:#f8fafc;padding:18px;border-radius:8px;border:1px solid #e2e8f0;margin-bottom:20px;">
+<span style="color:#475569;">// Sentinel output → injected into Analyst context</span>
+<span style="color:#22c55e;">"sentinel"</span>: {
+  <span style="color:#3b82f6;">"severity"</span>: <span style="color:#ef4444;">5</span>,
+  <span style="color:#3b82f6;">"flag"</span>: <span style="color:#22c55e;">"YES"</span>,
+  <span style="color:#3b82f6;">"top_concern"</span>: <span style="color:#22c55e;">"22 repeat offenders — systematic failure"</span>
+},
+<span style="color:#22c55e;">"zip_profile"</span>: {
+  <span style="color:#3b82f6;">"zip"</span>: <span style="color:#22c55e;">"95122"</span>, <span style="color:#3b82f6;">"risk_rank"</span>: <span style="color:#ef4444;">3</span>,
+  <span style="color:#3b82f6;">"red_count"</span>: <span style="color:#ef4444;">100</span>, <span style="color:#3b82f6;">"crit_per_biz"</span>: <span style="color:#ef4444;">2.0</span>,
+  <span style="color:#3b82f6;">"repeat_offenders"</span>: <span style="color:#ef4444;">22</span>,
+  <span style="color:#3b82f6;">"crime_on_food_streets"</span>: <span style="color:#ef4444;">4187</span>,
+  <span style="color:#3b82f6;">"poverty_rate"</span>: <span style="color:#eab308;">10.5</span>,
+  <span style="color:#3b82f6;">"median_income"</span>: <span style="color:#eab308;">94924</span>
+},
+<span style="color:#22c55e;">"top_violators"</span>: [
+  {<span style="color:#3b82f6;">"name"</span>: <span style="color:#22c55e;">"Banh Mi Oven"</span>, <span style="color:#3b82f6;">"critical"</span>: <span style="color:#ef4444;">23</span>, <span style="color:#3b82f6;">"red"</span>: <span style="color:#ef4444;">9</span>},
+  {<span style="color:#3b82f6;">"name"</span>: <span style="color:#22c55e;">"Los Arcos"</span>, <span style="color:#3b82f6;">"critical"</span>: <span style="color:#ef4444;">14</span>, <span style="color:#3b82f6;">"red"</span>: <span style="color:#ef4444;">2</span>}
+],
+<span style="color:#22c55e;">"county_benchmarks"</span>: {
+  <span style="color:#3b82f6;">"avg_crit_per_biz"</span>: <span style="color:#94a3b8;">1.08</span>,
+  <span style="color:#3b82f6;">"median_income"</span>: <span style="color:#94a3b8;">153000</span>
+}
+      </div>
+
+      <div style="font-size:12px;color:#475569;text-transform:uppercase;letter-spacing:2px;margin-bottom:12px;">Why OpenClaw, not sequential API calls</div>
+      <div style="display:grid;gap:8px;">
+        <div style="padding:12px;border-left:3px solid #16a34a;background:#f8fafc;font-size:14px;">
+          <strong style="color:#1e293b;">Structured context accumulation</strong><br>
+          <span style="color:#94a3b8;">Each agent's output is typed and injected into the next agent's prompt as structured data — not raw text. The Analyst knows exactly what the Sentinel decided and why.</span>
+        </div>
+        <div style="padding:12px;border-left:3px solid #2563eb;background:#f8fafc;font-size:14px;">
+          <strong style="color:#1e293b;">Decision-driven routing, not hard-coded sequence</strong><br>
+          <span style="color:#94a3b8;">Severity &lt; 3 → Analyst skipped. Severity = 5 → Messenger routes immediately, not on schedule. OpenClaw reads the payload and adjusts the pipeline at runtime.</span>
+        </div>
+        <div style="padding:12px;border-left:3px solid #eab308;background:#f8fafc;font-size:14px;">
+          <strong style="color:#1e293b;">128K context window = full cross-silo profile in one pass</strong><br>
+          <span style="color:#94a3b8;">Nemotron 70B on the GB10's 128GB unified memory holds the complete ZIP profile — all 12 metrics, benchmarks, top violators — without truncation. The Analyst reasons over the whole picture.</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- APPENDIX R: Full System Architecture -->
+<div class="slide" id="sar">
+  <h3>Appendix R — Full System Architecture</h3>
+  <div style="font-size:13px;color:#94a3b8;margin-bottom:16px;">All components running on a single NVIDIA DGX Spark (GB10)</div>
+
+  <div style="display:grid;grid-template-columns:180px 160px 1fr 160px 200px;gap:0;align-items:center;font-size:12px;">
+
+    <!-- Col 1: Data Sources -->
+    <div style="padding-right:12px;">
+      <div style="font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:12px;text-align:center;">Data Sources</div>
+      <div style="display:grid;gap:6px;">
+        <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:6px;padding:8px 10px;">
+          <div style="color:#ea580c;font-weight:600;">Food Safety</div>
+          <div style="color:#94a3b8;font-size:10px;">95K+ records · DEH</div>
+        </div>
+        <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:6px;padding:8px 10px;">
+          <div style="color:#dc2626;font-weight:600;">Crime Reports</div>
+          <div style="color:#94a3b8;font-size:10px;">260K incidents · SJPD</div>
+        </div>
+        <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:8px 10px;">
+          <div style="color:#2563eb;font-weight:600;">Census / ACS</div>
+          <div style="color:#94a3b8;font-size:10px;">62 ZIP codes</div>
+        </div>
+        <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;padding:8px 10px;">
+          <div style="color:#16a34a;font-weight:600;">CDC PLACES</div>
+          <div style="color:#94a3b8;font-size:10px;">16K health tracts</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Col 2: Processing -->
+    <div style="text-align:center;padding:0 12px;">
+      <div style="font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:12px;">Processing</div>
+      <div style="font-size:22px;color:#cbd5e1;margin-bottom:8px;">→</div>
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px;">
+        <div style="color:#475569;font-weight:600;font-size:11px;">build_risk.py</div>
+        <div style="color:#94a3b8;font-size:10px;margin-top:4px;">Geographic join<br>Street normalization<br>KD-tree CDC join<br>Percentile scoring</div>
+      </div>
+      <div style="font-size:22px;color:#cbd5e1;margin-top:8px;">↓</div>
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px;margin-top:6px;">
+        <div style="color:#475569;font-weight:600;font-size:11px;">zip_risk.json</div>
+        <div style="color:#94a3b8;font-size:10px;">92 ZIP profiles</div>
+      </div>
+    </div>
+
+    <!-- Col 3: Agent Pipeline -->
+    <div style="padding:0 12px;">
+      <div style="font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:12px;text-align:center;">Agent Pipeline (OpenClaw · Nemotron 70B · Ollama :11434)</div>
+      <div style="display:grid;grid-template-columns:1fr 20px 1fr 20px 1fr 20px 1fr;gap:0;align-items:center;">
+        <div style="background:#f0fdf4;border:2px solid #16a34a;border-radius:8px;padding:10px;text-align:center;">
+          <div style="color:#16a34a;font-weight:700;font-size:13px;">SENTINEL</div>
+          <div style="color:#475569;font-size:10px;margin-top:4px;">Triage &amp; flag<br>Severity 1–5<br>&lt;5s per scan</div>
+        </div>
+        <div style="text-align:center;color:#cbd5e1;font-size:16px;">→</div>
+        <div style="background:#faf5ff;border:2px solid #7c3aed;border-radius:8px;padding:10px;text-align:center;">
+          <div style="color:#7c3aed;font-weight:700;font-size:13px;">ANALYST</div>
+          <div style="color:#475569;font-size:10px;margin-top:4px;">Cross-silo<br>Root causes<br>128K context</div>
+        </div>
+        <div style="text-align:center;color:#cbd5e1;font-size:16px;">→</div>
+        <div style="background:#eff6ff;border:2px solid #2563eb;border-radius:8px;padding:10px;text-align:center;">
+          <div style="color:#2563eb;font-weight:700;font-size:13px;">ADVISOR</div>
+          <div style="color:#475569;font-size:10px;margin-top:4px;">Tailored output<br>per recipient<br>5 formats</div>
+        </div>
+        <div style="text-align:center;color:#cbd5e1;font-size:16px;">→</div>
+        <div style="background:#fefce8;border:2px solid #d97706;border-radius:8px;padding:10px;text-align:center;">
+          <div style="color:#d97706;font-weight:700;font-size:13px;">MESSENGER</div>
+          <div style="color:#475569;font-size:10px;margin-top:4px;">Route &amp; deliver<br>Track follow-up<br>4 channels</div>
+        </div>
+      </div>
+      <div style="margin-top:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:8px 12px;font-size:10px;color:#64748b;text-align:center;">
+        Context flows downstream: each agent sees prior agent's full output · Decision-driven, not just sequential
+      </div>
+    </div>
+
+    <!-- Col 4: Channels -->
+    <div style="text-align:center;padding:0 12px;">
+      <div style="font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:12px;">Channels</div>
+      <div style="font-size:22px;color:#cbd5e1;margin-bottom:8px;">→</div>
+      <div style="display:grid;gap:6px;font-size:11px;">
+        <div style="background:#fff1f2;border:1px solid #fecaca;border-radius:6px;padding:6px 10px;color:#dc2626;">📧 Email brief</div>
+        <div style="background:#fefce8;border:1px solid #fef08a;border-radius:6px;padding:6px 10px;color:#d97706;">🖥 Dashboard</div>
+        <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;padding:6px 10px;color:#16a34a;">💬 SMS / text</div>
+        <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:6px 10px;color:#2563eb;">🌐 Web chat</div>
+        <div style="background:#faf5ff;border:1px solid #e9d5ff;border-radius:6px;padding:6px 10px;color:#7c3aed;">📊 PDF report</div>
+      </div>
+    </div>
+
+    <!-- Col 5: Recipients -->
+    <div style="padding-left:12px;">
+      <div style="font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:12px;text-align:center;">Recipients</div>
+      <div style="display:grid;gap:6px;font-size:11px;">
+        <div style="padding:8px 10px;border-left:3px solid #dc2626;background:#fff1f2;border-radius:0 6px 6px 0;">
+          <div style="color:#dc2626;font-weight:600;">County Health Officer</div>
+          <div style="color:#94a3b8;font-size:10px;">Cross-dept action</div>
+        </div>
+        <div style="padding:8px 10px;border-left:3px solid #d97706;background:#fefce8;border-radius:0 6px 6px 0;">
+          <div style="color:#d97706;font-weight:600;">Inspection Supervisor</div>
+          <div style="color:#94a3b8;font-size:10px;">Priority queue</div>
+        </div>
+        <div style="padding:8px 10px;border-left:3px solid #16a34a;background:#f0fdf4;border-radius:0 6px 6px 0;">
+          <div style="color:#16a34a;font-weight:600;">Restaurant Owner</div>
+          <div style="color:#94a3b8;font-size:10px;">Coaching checklist</div>
+        </div>
+        <div style="padding:8px 10px;border-left:3px solid #2563eb;background:#eff6ff;border-radius:0 6px 6px 0;">
+          <div style="color:#2563eb;font-weight:600;">Community Resident</div>
+          <div style="color:#94a3b8;font-size:10px;">Safety answers</div>
+        </div>
+        <div style="padding:8px 10px;border-left:3px solid #7c3aed;background:#faf5ff;border-radius:0 6px 6px 0;">
+          <div style="color:#7c3aed;font-weight:600;">County Supervisor</div>
+          <div style="color:#94a3b8;font-size:10px;">District scorecard</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- APPENDIX I: Why Agents -->
+<div class="slide" id="sai">
+  <h3>Appendix I — Why Agents, Not Scripts</h3>
+  <div class="spacer"></div>
+  <h2>A script can join datasets. Only agents can reason, decide, and act.</h2>
+  <div class="spacer-lg"></div>
+  <div class="two-col">
+    <div>
+      <h2 style="color:#64748b;">Without agents (just a script)</h2>
+      <div class="spacer"></div>
+      <div class="card" style="margin-bottom:16px;">
+        <h4>Static thresholds</h4>
+        <p>Hard-coded rules: "if violations > 10, flag." No reasoning about WHY or whether it matters in context.</p>
+      </div>
+      <div class="card" style="margin-bottom:16px;">
+        <h4>One-size-fits-all output</h4>
+        <p>Same report for everyone. A health officer and a restaurant owner see the same data dump.</p>
+      </div>
+      <div class="card">
+        <h4>No adaptation</h4>
+        <p>Can't explain its reasoning. Can't adjust when a pattern doesn't fit the rules. Breaks on edge cases.</p>
+      </div>
+    </div>
+    <div>
+      <h2 style="color:#22c55e;">With OpenClaw agents</h2>
+      <div class="spacer"></div>
+      <div class="card" style="margin-bottom:16px;border-left:3px solid #16a34a;">
+        <h4>Contextual reasoning</h4>
+        <p>Analyst UNDERSTANDS why 95122 is different: "High poverty + food insecurity means these failures disproportionately harm vulnerable residents."</p>
+      </div>
+      <div class="card" style="margin-bottom:16px;border-left:3px solid #16a34a;">
+        <h4>Tailored communication</h4>
+        <p>Advisor generates different outputs for each recipient: strategy for officials, checklists for owners, plain language for residents.</p>
+      </div>
+      <div class="card" style="border-left:3px solid #16a34a;">
+        <h4>Autonomous decision-making</h4>
+        <p>Sentinel decides what's worth flagging. Analyst decides severity. Advisor decides what to recommend. Messenger decides urgency.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- APPENDIX J: Tech Stack -->
+<div class="slide" id="saj">
+  <h3>Appendix J — Technical Architecture</h3>
+  <div class="spacer"></div>
+  <div class="two-col">
+    <div>
+      <h2>Runs entirely on-device</h2>
+      <div class="spacer"></div>
+      <div class="card" style="margin-bottom:16px;">
+        <h4>Hardware</h4>
+        <p>NVIDIA DGX Spark (GB10) — Grace Blackwell, 128GB unified memory. No cloud. No data leaves the machine.</p>
+      </div>
+      <div class="card" style="margin-bottom:16px;">
+        <h4>Models</h4>
+        <p>Nemotron 70B (42GB) for all four agents via Ollama on the GB10's 128GB unified memory.</p>
+      </div>
+      <div class="card">
+        <h4>Orchestration</h4>
+        <p>OpenClaw — 4 specialized agents with context passing, decision-making, and routing.</p>
+      </div>
+    </div>
+    <div>
+      <h2>Data Pipeline</h2>
+      <div class="spacer"></div>
+      <div class="card" style="margin-bottom:16px;">
+        <h4>Primary (provided)</h4>
+        <p>260K crime reports + 8,588 food businesses + 22K inspections + 64K violations + 26K employees + 4.5K photos</p>
+      </div>
+      <div class="card" style="margin-bottom:16px;">
+        <h4>Supplemental (acquired)</h4>
+        <p>Census ACS (62 zip codes, income/poverty) + CDC PLACES (408 tracts, 40 health measures)</p>
+      </div>
+      <div class="card">
+        <h4>Joined by geography</h4>
+        <p>Food biz lat/lon → zip → census tract. Crime by street → matched to food business streets. Health outcomes by tract.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- APPENDIX K: District Scorecard -->
+<div class="slide" id="sak">
+  <h3>Appendix K — District Scorecard</h3>
+  <div class="spacer"></div>
+  <h2>District 3 has 19% of restaurants but bears 34% of repeat failures</h2>
+  <div class="spacer"></div>
+  <table class="data-table" style="font-size:16px;">
+    <tr><th></th><th>Population</th><th>Businesses</th><th>Red Insp.</th><th>Critical Viols</th><th>Repeat Offenders</th><th>Poverty</th><th>Med. Income</th></tr>
+    <tr>
+      <td><strong>District 1</strong><br><span class="small">South County</span></td>
+      <td>341K</td><td>1,106</td><td>108</td><td>1,126</td><td>19</td><td>6.5%</td><td>$148K</td>
+    </tr>
+    <tr>
+      <td><strong>District 2</strong><br><span class="small">West Valley</span></td>
+      <td>461K</td><td>1,949</td><td>146</td><td>2,069</td><td>33</td><td>5.2%</td><td>$178K</td>
+    </tr>
+    <tr style="background:#1c1917;">
+      <td><strong style="color:#ef4444;">District 3</strong><br><span class="small" style="color:#ef4444;">East SJ / Milpitas</span></td>
+      <td>253K</td><td>1,597</td><td style="color:#ef4444;font-weight:700;">234</td><td style="color:#ef4444;font-weight:700;">2,296</td><td style="color:#ef4444;font-weight:700;">55</td><td style="color:#eab308;">10.1%</td><td style="color:#eab308;">$95K</td>
+    </tr>
+    <tr>
+      <td><strong>District 4</strong><br><span class="small">Central SJ</span></td>
+      <td>345K</td><td>1,122</td><td>127</td><td>1,312</td><td>22</td><td>14.8%</td><td>$101K</td>
+    </tr>
+    <tr>
+      <td><strong>District 5</strong><br><span class="small">North County</span></td>
+      <td>505K</td><td>2,578</td><td>181</td><td>2,333</td><td>32</td><td>6.0%</td><td>$175K</td>
+    </tr>
+  </table>
+  <div class="spacer"></div>
+  <div class="two-col" style="grid-template-columns:1fr 1fr 1fr;">
+    <div class="highlight">
+      <p style="font-size:17px;"><strong>District 3</strong> has 19% of businesses but <strong>29% of Red inspections</strong> and <strong>34% of repeat offenders</strong></p>
+    </div>
+    <div class="highlight" style="border-left-color:#eab308;">
+      <p style="font-size:17px;"><strong>District 4</strong> has the highest poverty rate (14.8%) and lowest median income ($101K)</p>
+    </div>
+    <div class="highlight green">
+      <p style="font-size:17px;">Today, <strong>no elected official</strong> sees this table. Each department reports separately.</p>
+    </div>
+  </div>
+</div>
+
+<!-- APPENDIX L: Recommended Actions -->
+<div class="slide" id="sal">
+  <h3>Appendix L — Recommended Actions — What the Inter-Department Head Does Monday Morning</h3>
+  <div class="spacer"></div>
+  <table class="data-table" style="font-size:15px;">
+    <tr><th style="width:28%;">Action</th><th>Departments</th><th>Target</th><th>Projected Impact</th></tr>
+    <tr>
+      <td><strong style="color:#ef4444;">1. Coaching Program</strong><br><span style="color:#64748b;">Pre-inspection outreach with personalized violation fix-lists</span></td>
+      <td>DEH</td>
+      <td>161 repeat offenders<br><span class="small">(2+ Red inspections)</span></td>
+      <td>
+        <strong style="color:#22c55e;">129 Red inspections prevented</strong><br>
+        266 critical violations avoided<br>
+        $1.3M saved for restaurant owners<br>
+        516 inspector hours freed
+      </td>
+    </tr>
+    <tr>
+      <td><strong style="color:#eab308;">2. Risk-Based Reallocation</strong><br><span style="color:#64748b;">Double high-risk frequency, halve low-risk</span></td>
+      <td>DEH</td>
+      <td>1,106 high-risk<br>4,269 low-risk</td>
+      <td>
+        <strong style="color:#22c55e;">6,326 inspector hours redeployed</strong><br>
+        442 violations caught early<br>
+        Same headcount, smarter deployment
+      </td>
+    </tr>
+    <tr>
+      <td><strong style="color:#3b82f6;">3. Temperature Blitz</strong><br><span style="color:#64748b;">Equipment grants + training for worst temp violators</span></td>
+      <td>DEH + Public Health</td>
+      <td>Top 100 temp violators<br><span class="small">(37% of all critical)</span></td>
+      <td>
+        <strong style="color:#22c55e;">172 violations prevented</strong><br>
+        200-500 foodborne illness cases/yr avoided
+      </td>
+    </tr>
+    <tr style="background:#1c1917;">
+      <td><strong style="color:#7c3aed;">4. District 3 Surge</strong><br><span style="color:#64748b;">Cross-dept intervention in highest-disparity district</span></td>
+      <td style="color:#ef4444;font-weight:600;">DEH + Sheriff +<br>Public Health</td>
+      <td>1,592 businesses<br>253K residents</td>
+      <td>
+        <strong style="color:#22c55e;">86 Red inspections reduced</strong><br>
+        Bring D3 from 14.7% → 9.3% Red rate<br>
+        22 repeat offenders converted
+      </td>
+    </tr>
+  </table>
+  <div class="spacer"></div>
+  <div class="highlight">
+    <p style="font-size:18px;"><strong>Key insight:</strong> 161 repeat offenders generate <strong>54% of all Red inspections</strong>. Coaching just these 161 has more impact than adding inspectors countywide. Precision beats volume.</p>
+  </div>
+</div>
+
+<!-- APPENDIX M: Combined Impact Projections -->
+<div class="slide" id="sam">
+  <h3>Appendix M — Combined Impact Projections — Year 1 Projections</h3>
+  <div class="spacer-lg"></div>
+  <div class="three-col">
+    <div class="card" style="text-align:center;">
+      <div class="stat green">436</div>
+      <h4>Red Inspections Prevented</h4>
+      <p>55% reduction. Fewer closures, less food waste, safer restaurants.</p>
+    </div>
+    <div class="card" style="text-align:center;">
+      <div class="stat green">781</div>
+      <h4>Critical Violations Avoided</h4>
+      <p>8% reduction countywide through coaching, reallocation, and temperature programs.</p>
+    </div>
+    <div class="card" style="text-align:center;">
+      <div class="stat green">$4.4M</div>
+      <h4>Restaurant Savings</h4>
+      <p>Avoided food destruction, closure costs, and re-inspection fees.</p>
+    </div>
+  </div>
+  <div class="spacer"></div>
+  <div class="three-col">
+    <div class="card" style="text-align:center;">
+      <div class="stat blue">6,326</div>
+      <h4>Inspector Hours Redeployed</h4>
+      <p>From low-risk visits to high-risk neighborhoods. Same budget, 3x impact.</p>
+    </div>
+    <div class="card" style="text-align:center;">
+      <div class="stat amber">500–1,500</div>
+      <h4>Illness Cases Prevented</h4>
+      <p>By attacking temperature control at its source in 100 restaurants.</p>
+    </div>
+    <div class="card" style="text-align:center;">
+      <div class="stat" style="color:#7c3aed;">253K</div>
+      <h4>Residents Directly Benefited</h4>
+      <p>District 3 intervention targets the county's most underserved area.</p>
+    </div>
+  </div>
+  <div class="spacer"></div>
+  <div class="highlight green">
+    <p style="font-size:18px;">None of these actions require new budget. They require <strong>connecting data that already exists</strong> and <strong>deploying resources that are already allocated</strong> — just smarter.</p>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- APPENDIX Q: User Interactions -->
+<div class="slide" id="saq">
+  <h3>Appendix Q — How Each User Interacts with CivicPulse</h3>
+  <div style="font-size:13px;color:#475569;margin-bottom:20px;">Realistic channels · actual message formats · agent-generated content</div>
+
+  <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;font-size:12px;">
+
+    <!-- County Health Officer -->
+    <div style="border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;">
+      <div style="background:#fff1f2;padding:10px 12px;border-bottom:1px solid #e2e8f0;">
+        <div style="color:#ef4444;font-weight:700;font-size:13px;">County Health Officer</div>
+        <div style="margin-top:4px;display:inline-block;background:#e9edf2;color:#94a3b8;font-size:10px;padding:2px 8px;border-radius:4px;">📧 Email · Monday 8:00 AM</div>
+      </div>
+      <div style="padding:10px 12px;background:#f9fafb;">
+        <!-- Email mockup -->
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:10px;font-family:monospace;font-size:11px;line-height:1.6;">
+          <div style="color:#475569;margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid #e2e8f0;">
+            <span style="color:#64748b;">From:</span> <span style="color:#94a3b8;">CivicPulse</span><br>
+            <span style="color:#64748b;">To:</span> <span style="color:#94a3b8;">Dr. Sarah Chen</span><br>
+            <span style="color:#64748b;">Re:</span> <span style="color:#ef4444;">⚠ Weekly Risk Brief — 3 ZIPs flagged</span>
+          </div>
+          <div style="color:#94a3b8;line-height:1.7;">
+            <span style="color:#ef4444;font-weight:600;">ZIP 95122</span> crossed compounding risk threshold this week.<br><br>
+            <span style="color:#64748b;">Risk Score:</span> 82.1/100 (rank #3)<br>
+            <span style="color:#64748b;">New Red insp:</span> 3 this week<br>
+            <span style="color:#64748b;">Repeat offenders:</span> 22 businesses<br>
+            <span style="color:#64748b;">Poverty rate:</span> 10.5% ($94K income)<br><br>
+            <span style="color:#22c55e;">Recommendation:</span> Cross-department surge — DEH + Sheriff + Public Health. Full brief attached.<br><br>
+            <span style="color:#475569;">Also flagged: 95113 · 95112</span>
+          </div>
+        </div>
+        <div style="margin-top:8px;color:#475569;font-size:11px;line-height:1.5;">She forwards to DEH, Sheriff, and Public Health leads with one click. The Advisor already drafted the intervention plan.</div>
+      </div>
+    </div>
+
+    <!-- Inspection Supervisor -->
+    <div style="border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;">
+      <div style="background:#fefce8;padding:10px 12px;border-bottom:1px solid #e2e8f0;">
+        <div style="color:#eab308;font-weight:700;font-size:13px;">Inspection Supervisor</div>
+        <div style="margin-top:4px;display:inline-block;background:#e9edf2;color:#94a3b8;font-size:10px;padding:2px 8px;border-radius:4px;">🖥 Dashboard · 7:30 AM daily</div>
+      </div>
+      <div style="padding:10px 12px;background:#f9fafb;">
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:10px;font-size:11px;line-height:1.6;">
+          <div style="color:#64748b;font-size:10px;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Priority Queue — Tuesday</div>
+          <div style="padding:8px;background:#fff1f2;border-left:3px solid #ef4444;border-radius:0 4px 4px 0;margin-bottom:6px;">
+            <div style="color:#ef4444;font-weight:600;">1. Banh Mi Oven</div>
+            <div style="color:#64748b;">95122 · 9 Red · 23 critical</div>
+            <div style="color:#94a3b8;margin-top:4px;font-size:10px;">Pre-visit: focus on temp control &amp; TPHC labeling — 7 of 9 prior Red failures involved these two violations</div>
+          </div>
+          <div style="padding:8px;background:#f8fafc;border-left:3px solid #eab308;border-radius:0 4px 4px 0;margin-bottom:6px;">
+            <div style="color:#eab308;font-weight:600;">2. Mariscos Playa Azul</div>
+            <div style="color:#64748b;">95116 · 4 Red · 16 critical</div>
+          </div>
+          <div style="padding:8px;background:#f8fafc;border-left:3px solid #475569;border-radius:0 4px 4px 0;">
+            <div style="color:#94a3b8;font-weight:600;">3. Tomi Sushi</div>
+            <div style="color:#64748b;">95122 · 5 Red · 11 critical</div>
+          </div>
+        </div>
+        <div style="margin-top:8px;color:#475569;font-size:11px;line-height:1.5;">One-click to assign inspector. Pre-visit brief auto-generated from violation history.</div>
+      </div>
+    </div>
+
+    <!-- Restaurant Owner -->
+    <div style="border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;">
+      <div style="background:#f0fdf4;padding:10px 12px;border-bottom:1px solid #e2e8f0;">
+        <div style="color:#22c55e;font-weight:700;font-size:13px;">Restaurant Owner</div>
+        <div style="margin-top:4px;display:inline-block;background:#e9edf2;color:#94a3b8;font-size:10px;padding:2px 8px;border-radius:4px;">💬 SMS · 7 days before inspection</div>
+      </div>
+      <div style="padding:10px 12px;background:#f9fafb;">
+        <!-- SMS mockup -->
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:10px;font-size:11px;">
+          <div style="color:#475569;font-size:10px;text-align:center;margin-bottom:8px;">Wed 10:02 AM · (408) 299-2100</div>
+          <!-- Incoming -->
+          <div style="background:#e9edf2;border-radius:12px 12px 12px 4px;padding:8px 10px;margin-bottom:6px;max-width:90%;line-height:1.6;color:#1e293b;">
+            Hi, this is CivicPulse. Your DEH inspection is scheduled next week for <strong>Tomi Sushi</strong>.<br><br>
+            Based on your last 5 inspections, your most likely violations are:<br>
+            1. Hot holding temps — calibrate reach-in cooler<br>
+            2. Time marking — label all TPHC items<br>
+            3. Handwash sink — stock soap &amp; paper towels<br><br>
+            Fixing these 3 items resolved 78% of prior failures at similar restaurants. Reply HELP for details.
+          </div>
+          <!-- Reply -->
+          <div style="background:#22c55e;border-radius:12px 12px 4px 12px;padding:8px 10px;margin-left:auto;max-width:60%;line-height:1.5;color:#052e16;">
+            thanks — what temp should cooler be at?
+          </div>
+          <div style="background:#e9edf2;border-radius:12px 12px 12px 4px;padding:8px 10px;margin-top:6px;max-width:90%;color:#1e293b;line-height:1.6;">
+            Cold holding must stay at 41°F or below. Yours was 46°F in your last inspection (July 2025). Check the thermostat and door seals.
+          </div>
+        </div>
+        <div style="margin-top:8px;color:#475569;font-size:11px;line-height:1.5;">Two-way SMS. Owner asks follow-ups, agent answers from inspection record context.</div>
+      </div>
+    </div>
+
+    <!-- Resident -->
+    <div style="border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;">
+      <div style="background:#eff6ff;padding:10px 12px;border-bottom:1px solid #e2e8f0;">
+        <div style="color:#3b82f6;font-weight:700;font-size:13px;">Community Resident</div>
+        <div style="margin-top:4px;display:inline-block;background:#e9edf2;color:#94a3b8;font-size:10px;padding:2px 8px;border-radius:4px;">🌐 Public website · any time</div>
+      </div>
+      <div style="padding:10px 12px;background:#f9fafb;">
+        <!-- Web chat mockup -->
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;font-size:11px;overflow:hidden;">
+          <div style="background:#e9edf2;padding:6px 10px;color:#64748b;font-size:10px;">civicpulse.scc.gov/check</div>
+          <div style="padding:10px;">
+            <!-- User message -->
+            <div style="background:#1e3a5f;border-radius:12px 12px 4px 12px;padding:7px 10px;margin-left:auto;max-width:80%;color:#1e293b;margin-bottom:6px;">
+              is banh mi oven safe to eat at?
+            </div>
+            <!-- Agent response -->
+            <div style="background:#e9edf2;border-radius:4px 12px 12px 12px;padding:8px 10px;max-width:95%;color:#1e293b;line-height:1.6;margin-bottom:6px;">
+              <span style="color:#ef4444;font-weight:600;">Banh Mi Oven</span> has failed <strong>9 of its last 13 inspections</strong> with 23 critical violations, mostly temperature control issues. It's currently active but high-risk.<br><br>
+              <span style="color:#22c55e;">Nearby alternatives with clean records:</span><br>
+              · Lee's Sandwiches (0.3mi) — Green<br>
+              · Pho 69 (0.5mi) — Green<br>
+              · Bun Bo Hue An Nam (0.6mi) — Green
+            </div>
+            <!-- Input -->
+            <div style="border:1px solid #334155;border-radius:6px;padding:6px 10px;color:#475569;">Ask about any restaurant or neighborhood…</div>
+          </div>
+        </div>
+        <div style="margin-top:8px;color:#475569;font-size:11px;line-height:1.5;">No login required. Powered by Advisor agent with live inspection data.</div>
+      </div>
+    </div>
+
+    <!-- County Supervisor -->
+    <div style="border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;">
+      <div style="background:#faf5ff;padding:10px 12px;border-bottom:1px solid #e2e8f0;">
+        <div style="color:#7c3aed;font-weight:700;font-size:13px;">County Supervisor</div>
+        <div style="margin-top:4px;display:inline-block;background:#e9edf2;color:#94a3b8;font-size:10px;padding:2px 8px;border-radius:4px;">📊 PDF Report · monthly</div>
+      </div>
+      <div style="padding:10px 12px;background:#f9fafb;">
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:10px;font-size:11px;line-height:1.6;">
+          <div style="color:#7c3aed;font-weight:700;font-size:12px;margin-bottom:4px;">District 3 Scorecard — March 2026</div>
+          <div style="color:#64748b;font-size:10px;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid #e2e8f0;">Prepared by CivicPulse · Confidential</div>
+          <div style="color:#ef4444;margin-bottom:6px;font-weight:600;">⚠ 3 of county's top 10 risk ZIPs are in your district</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:8px;">
+            <div style="color:#64748b;">Red inspections:</div><div style="color:#ef4444;font-weight:600;">234 (29% of county)</div>
+            <div style="color:#64748b;">Repeat offenders:</div><div style="color:#ef4444;font-weight:600;">55 (34% of county)</div>
+            <div style="color:#64748b;">Median income:</div><div style="color:#eab308;">$95K vs $153K county</div>
+            <div style="color:#64748b;">Residents affected:</div><div style="color:#94a3b8;">253,000</div>
+          </div>
+          <div style="background:#f0fdf4;border-left:2px solid #16a34a;padding:6px 8px;color:#15803d;font-size:10px;border-radius:0 4px 4px 0;">
+            Board talking point: "District 3 bears 34% of repeat food safety failures with 19% of county restaurants. Cross-agency intervention is overdue."
+          </div>
+        </div>
+        <div style="margin-top:8px;color:#475569;font-size:11px;line-height:1.5;">Monthly PDF + dashboard. Board-ready language auto-generated by Advisor agent.</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- APPENDIX Q-2: Agent x User Matrix -->
+<div class="slide" id="saq2">
+  <h3>Appendix Q-2 — Which Agents Serve Each User</h3>
+  <div style="font-size:13px;color:#475569;margin-bottom:20px;">Every user persona gets a different agent configuration · same data, tailored intelligence</div>
+  <div style="overflow-x:auto;">
+    <table style="width:100%;border-collapse:collapse;font-size:12px;">
+      <thead>
+        <tr>
+          <th style="padding:10px 14px;text-align:left;background:#0f172a;color:#94a3b8;font-size:11px;letter-spacing:1px;text-transform:uppercase;border-bottom:2px solid #334155;width:18%;">User</th>
+          <th style="padding:10px 14px;text-align:left;background:#0f172a;border-bottom:2px solid #ef4444;width:20.5%;">
+            <div style="color:#ef4444;font-weight:700;">SENTINEL</div>
+            <div style="color:#64748b;font-size:10px;margin-top:2px;">Data Scanner · No LLM</div>
+          </th>
+          <th style="padding:10px 14px;text-align:left;background:#0f172a;border-bottom:2px solid #f59e0b;width:20.5%;">
+            <div style="color:#f59e0b;font-weight:700;">ANALYST</div>
+            <div style="color:#64748b;font-size:10px;margin-top:2px;">Cross-Silo Reasoner · Nemotron</div>
+          </th>
+          <th style="padding:10px 14px;text-align:left;background:#0f172a;border-bottom:2px solid #22c55e;width:20.5%;">
+            <div style="color:#22c55e;font-weight:700;">ADVISOR</div>
+            <div style="color:#64748b;font-size:10px;margin-top:2px;">Context Strategist · Nemotron</div>
+          </th>
+          <th style="padding:10px 14px;text-align:left;background:#0f172a;border-bottom:2px solid #3b82f6;width:20.5%;">
+            <div style="color:#3b82f6;font-weight:700;">MESSENGER</div>
+            <div style="color:#64748b;font-size:10px;margin-top:2px;">Outreach Writer · Nemotron</div>
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="border-bottom:1px solid #1e293b;">
+          <td style="padding:12px 14px;background:#1a0000;"><div style="color:#ef4444;font-weight:700;">County Health Officer</div><div style="color:#64748b;font-size:10px;margin-top:3px;">Weekly risk monitoring, cross-agency coordination</div></td>
+          <td style="padding:12px 14px;background:#1a0000;"><div style="color:#ef4444;font-size:11px;font-weight:600;">Computes ZIP risk scores</div><div style="color:#94a3b8;font-size:10px;margin-top:4px;">Flags ZIPs crossing compound risk threshold. Counts red inspections, repeat offenders, poverty overlap this week.</div></td>
+          <td style="padding:12px 14px;background:#1a0000;"><div style="color:#f59e0b;font-size:11px;font-weight:600;">Explains why a ZIP is dangerous</div><div style="color:#94a3b8;font-size:10px;margin-top:4px;">Connects food failure patterns to income data, health outcomes. Identifies whether poverty or density is the primary driver.</div></td>
+          <td style="padding:12px 14px;background:#1a0000;"><div style="color:#22c55e;font-size:11px;font-weight:600;">Drafts intervention strategy</div><div style="color:#94a3b8;font-size:10px;margin-top:4px;">SACI brief (Situation / Actions / Coordination / Impact). Cross-dept surge recommendation. Ready to forward to DEH + Sheriff.</div></td>
+          <td style="padding:12px 14px;background:#1a0000;"><div style="color:#3b82f6;font-size:11px;font-weight:600;">Sends weekly email digest</div><div style="color:#94a3b8;font-size:10px;margin-top:4px;">Monday 8 AM summary of flagged ZIPs. One-click forward to partner agencies with plain-language exec summary attached.</div></td>
+        </tr>
+        <tr style="border-bottom:1px solid #1e293b;">
+          <td style="padding:12px 14px;background:#1a1400;"><div style="color:#eab308;font-weight:700;">Inspection Supervisor</div><div style="color:#64748b;font-size:10px;margin-top:3px;">Daily queue management, inspector deployment</div></td>
+          <td style="padding:12px 14px;background:#1a1400;"><div style="color:#ef4444;font-size:11px;font-weight:600;">Ranks businesses by risk</div><div style="color:#94a3b8;font-size:10px;margin-top:4px;">Priority queue of repeat offenders sorted by red inspection count x critical violation score. Updated each morning.</div></td>
+          <td style="padding:12px 14px;background:#1a1400;"><div style="color:#f59e0b;font-size:11px;font-weight:600;">Identifies violation patterns</div><div style="color:#94a3b8;font-size:10px;margin-top:4px;">Finds which specific violations recur across a business's history. Predicts what inspectors will find based on past patterns.</div></td>
+          <td style="padding:12px 14px;background:#1a1400;"><div style="color:#22c55e;font-size:11px;font-weight:600;">Generates pre-visit brief</div><div style="color:#94a3b8;font-size:10px;margin-top:4px;">One-page brief per business: focus areas, last 3 violations, known systemic issues. Inspector arrives prepared.</div></td>
+          <td style="padding:12px 14px;background:#1a1400;"><div style="color:#3b82f6;font-size:11px;font-weight:600;">Dashboard + daily push</div><div style="color:#94a3b8;font-size:10px;margin-top:4px;">7:30 AM dashboard with top 50 queue. Slack/email ping when a new critical business enters the top 10.</div></td>
+        </tr>
+        <tr style="border-bottom:1px solid #1e293b;">
+          <td style="padding:12px 14px;background:#001a08;"><div style="color:#22c55e;font-weight:700;">Restaurant Owner</div><div style="color:#64748b;font-size:10px;margin-top:3px;">Pre-inspection prep, compliance coaching</div></td>
+          <td style="padding:12px 14px;background:#001a08;"><div style="color:#ef4444;font-size:11px;font-weight:600;">Pulls violation history</div><div style="color:#94a3b8;font-size:10px;margin-top:4px;">Retrieves business's last N inspections, violation codes, scores. Detects patterns (same violation 3+ times = systemic).</div></td>
+          <td style="padding:12px 14px;background:#001a08;"><div style="color:#f59e0b;font-size:11px;font-weight:600;">Diagnoses root causes</div><div style="color:#94a3b8;font-size:10px;margin-top:4px;">Reasons about WHY violations recur — equipment, training, supply chain. Contextualizes against similar restaurant benchmarks.</div></td>
+          <td style="padding:12px 14px;background:#001a08;"><div style="color:#22c55e;font-size:11px;font-weight:600;">Prioritizes fixes</div><div style="color:#94a3b8;font-size:10px;margin-top:4px;">Top 3 items most likely to cause another Red. Specific remediation steps citing actual violation codes.</div></td>
+          <td style="padding:12px 14px;background:#001a08;"><div style="color:#3b82f6;font-size:11px;font-weight:600;">SMS coaching 7 days before</div><div style="color:#94a3b8;font-size:10px;margin-top:4px;">Personalized SMS with top issues and corrective actions. Two-way: owner texts back questions, agent answers from their record.</div></td>
+        </tr>
+        <tr style="border-bottom:1px solid #1e293b;">
+          <td style="padding:12px 14px;background:#00101a;"><div style="color:#3b82f6;font-weight:700;">Community Resident</div><div style="color:#64748b;font-size:10px;margin-top:3px;">Food safety lookup, neighborhood awareness</div></td>
+          <td style="padding:12px 14px;background:#00101a;"><div style="color:#ef4444;font-size:11px;font-weight:600;">Live restaurant lookup</div><div style="color:#94a3b8;font-size:10px;margin-top:4px;">Instant search of 8,588 businesses by name or ZIP. Returns last inspection score, Red/Green status, critical violation count.</div></td>
+          <td style="padding:12px 14px;background:#00101a;"><div style="color:#f59e0b;font-size:11px;font-weight:600;">Explains what violations mean</div><div style="color:#94a3b8;font-size:10px;margin-top:4px;">Translates inspection codes to plain language. "Temperature control failure" = "food not kept cold enough to prevent bacteria."</div></td>
+          <td style="padding:12px 14px;background:#00101a;"><div style="color:#22c55e;font-size:11px;font-weight:600;">Suggests safer alternatives</div><div style="color:#94a3b8;font-size:10px;margin-top:4px;">If a restaurant is high-risk, lists nearby options with clean records. Considers cuisine type and walking distance.</div></td>
+          <td style="padding:12px 14px;background:#00101a;"><div style="color:#3b82f6;font-size:11px;font-weight:600;">Public web chat (no login)</div><div style="color:#94a3b8;font-size:10px;margin-top:4px;">Conversational Q&amp;A on civicpulse.scc.gov/check. Multi-turn follow-ups in English, Spanish, or Vietnamese.</div></td>
+        </tr>
+        <tr>
+          <td style="padding:12px 14px;background:#0d0019;"><div style="color:#7c3aed;font-weight:700;">County Supervisor</div><div style="color:#64748b;font-size:10px;margin-top:3px;">District accountability, board reporting</div></td>
+          <td style="padding:12px 14px;background:#0d0019;"><div style="color:#ef4444;font-size:11px;font-weight:600;">District-level aggregation</div><div style="color:#94a3b8;font-size:10px;margin-top:4px;">Groups ZIPs into 5 SCC supervisorial districts. Computes district share of red inspections, repeat offenders, income disparity.</div></td>
+          <td style="padding:12px 14px;background:#0d0019;"><div style="color:#f59e0b;font-size:11px;font-weight:600;">Equity analysis</div><div style="color:#94a3b8;font-size:10px;margin-top:4px;">Identifies whether lower-income districts bear disproportionate food safety burden. Connects to poverty rates and health outcomes.</div></td>
+          <td style="padding:12px 14px;background:#0d0019;"><div style="color:#22c55e;font-size:11px;font-weight:600;">Board brief + talking points</div><div style="color:#94a3b8;font-size:10px;margin-top:4px;">One-page district scorecard with budget implications. Board-ready language with actionable funding ask included.</div></td>
+          <td style="padding:12px 14px;background:#0d0019;"><div style="color:#3b82f6;font-size:11px;font-weight:600;">Monthly PDF + dashboard</div><div style="color:#94a3b8;font-size:10px;margin-top:4px;">Automated report before board meetings. Trend lines showing improvement. Comparative benchmarking vs other districts.</div></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div style="margin-top:16px;display:grid;grid-template-columns:repeat(4,1fr);gap:10px;font-size:11px;">
+    <div style="background:#1a0a0a;border:1px solid #7f1d1d;border-radius:8px;padding:10px;"><div style="color:#ef4444;font-weight:700;margin-bottom:4px;">SENTINEL is always free</div><div style="color:#94a3b8;">Pure Python data scan — no LLM cost, runs in &lt;1 second. Every user gets instant accurate data before any AI inference begins.</div></div>
+    <div style="background:#1a1200;border:1px solid #78350f;border-radius:8px;padding:10px;"><div style="color:#f59e0b;font-weight:700;margin-bottom:4px;">ANALYST runs once per query</div><div style="color:#94a3b8;">Cross-silo reasoning cached at ZIP level. Same Nemotron call serves all users looking at the same ZIP — no redundant inference.</div></div>
+    <div style="background:#00150a;border:1px solid #14532d;border-radius:8px;padding:10px;"><div style="color:#22c55e;font-weight:700;margin-bottom:4px;">ADVISOR tailors per persona</div><div style="color:#94a3b8;">One inference call per user type per ZIP. Health officer gets SACI brief; supervisor gets queue brief; owner gets checklist.</div></div>
+    <div style="background:#000d1a;border:1px solid #1e3a5f;border-radius:8px;padding:10px;"><div style="color:#3b82f6;font-weight:700;margin-bottom:4px;">MESSENGER is on-demand</div><div style="color:#94a3b8;">Only fires when outreach is triggered (inspection scheduled, threshold crossed, resident query). No unnecessary generation.</div></div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- APPENDIX O: Full Software Stack -->
+<div class="slide" id="sao">
+  <h3>Appendix O — Full Software Stack</h3>
+  <div style="font-size:13px;color:#475569;margin-bottom:20px;">Everything running on the NVIDIA DGX Spark (GB10) — no cloud dependencies</div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:16px;font-size:13px;">
+
+    <!-- Hardware -->
+    <div>
+      <div style="font-size:11px;color:#3b82f6;text-transform:uppercase;letter-spacing:2px;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #e2e8f0;">Hardware</div>
+      <div style="display:grid;gap:6px;">
+        <div style="padding:8px 12px;background:#f8fafc;border-radius:6px;border:1px solid #e2e8f0;">
+          <div style="color:#1e293b;font-weight:600;">NVIDIA GB10</div>
+          <div style="color:#64748b;margin-top:2px;">DGX Spark · Grace Blackwell</div>
+        </div>
+        <div style="padding:8px 12px;background:#f8fafc;border-radius:6px;border:1px solid #e2e8f0;">
+          <div style="color:#1e293b;font-weight:600;">128 GB</div>
+          <div style="color:#64748b;margin-top:2px;">Unified LPDDR5x memory</div>
+        </div>
+        <div style="padding:8px 12px;background:#f8fafc;border-radius:6px;border:1px solid #e2e8f0;">
+          <div style="color:#1e293b;font-weight:600;">3.6 TB NVMe</div>
+          <div style="color:#64748b;margin-top:2px;">Local storage · no cloud</div>
+        </div>
+        <div style="padding:8px 12px;background:#f8fafc;border-radius:6px;border:1px solid #e2e8f0;">
+          <div style="color:#1e293b;font-weight:600;">Ubuntu Linux</div>
+          <div style="color:#64748b;margin-top:2px;">Kernel 6.17.0 · aarch64</div>
+        </div>
+        <div style="padding:8px 12px;background:#f8fafc;border-radius:6px;border:1px solid #e2e8f0;">
+          <div style="color:#1e293b;font-weight:600;">Driver 580.126</div>
+          <div style="color:#64748b;margin-top:2px;">NVIDIA · CUDA 13.0</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Inference & Orchestration -->
+    <div>
+      <div style="font-size:11px;color:#22c55e;text-transform:uppercase;letter-spacing:2px;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #e2e8f0;">Inference &amp; Orchestration</div>
+      <div style="display:grid;gap:6px;">
+        <div style="padding:8px 12px;background:#f0fdf4;border-radius:6px;border:1px solid #bbf7d0;">
+          <div style="color:#1e293b;font-weight:600;">nemotron:70b</div>
+          <div style="color:#64748b;margin-top:2px;">42 GB · all 4 agents · 128K ctx</div>
+        </div>
+        <div style="padding:8px 12px;background:#f0fdf4;border-radius:6px;border:1px solid #bbf7d0;">
+          <div style="color:#1e293b;font-weight:600;">Ollama</div>
+          <div style="color:#64748b;margin-top:2px;">Local inference · :11434 · OpenAI-compat API</div>
+        </div>
+        <div style="padding:8px 12px;background:#f0fdf4;border-radius:6px;border:1px solid #bbf7d0;">
+          <div style="color:#1e293b;font-weight:600;">OpenClaw 2026.3.12</div>
+          <div style="color:#64748b;margin-top:2px;">MCP gateway · agent orchestration · context routing</div>
+        </div>
+        <div style="padding:8px 12px;background:#f8fafc;border-radius:6px;border:1px solid #e2e8f0;">
+          <div style="color:#1e293b;font-weight:600;">openai 2.29.0</div>
+          <div style="color:#64748b;margin-top:2px;">Python SDK → Ollama OpenAI-compat endpoint</div>
+        </div>
+        <div style="padding:8px 12px;background:#f8fafc;border-radius:6px;border:1px solid #e2e8f0;">
+          <div style="color:#1e293b;font-weight:600;">FastAPI 0.135 · Uvicorn 0.42</div>
+          <div style="color:#64748b;margin-top:2px;">Agent API layer</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Data & Analytics -->
+    <div>
+      <div style="font-size:11px;color:#eab308;text-transform:uppercase;letter-spacing:2px;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #e2e8f0;">Data &amp; Analytics</div>
+      <div style="display:grid;gap:6px;">
+        <div style="padding:8px 12px;background:#f8fafc;border-radius:6px;border:1px solid #e2e8f0;">
+          <div style="color:#1e293b;font-weight:600;">pandas 3.0.1</div>
+          <div style="color:#64748b;margin-top:2px;">Dataset joins · risk scoring · aggregation</div>
+        </div>
+        <div style="padding:8px 12px;background:#f8fafc;border-radius:6px;border:1px solid #e2e8f0;">
+          <div style="color:#1e293b;font-weight:600;">numpy 2.4.3</div>
+          <div style="color:#64748b;margin-top:2px;">Percentile ranking · normalization</div>
+        </div>
+        <div style="padding:8px 12px;background:#f8fafc;border-radius:6px;border:1px solid #e2e8f0;">
+          <div style="color:#1e293b;font-weight:600;">scipy 1.17.1</div>
+          <div style="color:#64748b;margin-top:2px;">cKDTree · CDC tract → ZIP spatial join</div>
+        </div>
+        <div style="padding:8px 12px;background:#f8fafc;border-radius:6px;border:1px solid #e2e8f0;">
+          <div style="color:#1e293b;font-weight:600;">pydantic 2.12.5</div>
+          <div style="color:#64748b;margin-top:2px;">Structured agent payload validation</div>
+        </div>
+        <div style="padding:8px 12px;background:#f8fafc;border-radius:6px;border:1px solid #e2e8f0;">
+          <div style="color:#1e293b;font-weight:600;">requests 2.32.5</div>
+          <div style="color:#64748b;margin-top:2px;">Data acquisition · Census / CDC APIs</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- UI & Data Sources -->
+    <div>
+      <div style="font-size:11px;color:#ef4444;text-transform:uppercase;letter-spacing:2px;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #e2e8f0;">UI &amp; Data Sources</div>
+      <div style="display:grid;gap:6px;">
+        <div style="padding:8px 12px;background:#f8fafc;border-radius:6px;border:1px solid #e2e8f0;">
+          <div style="color:#1e293b;font-weight:600;">Gradio 6.9.0</div>
+          <div style="color:#64748b;margin-top:2px;">Demo UI · streaming agent output · :7860</div>
+        </div>
+        <div style="padding:8px 12px;background:#f8fafc;border-radius:6px;border:1px solid #e2e8f0;">
+          <div style="color:#1e293b;font-weight:600;">Plotly 6.6.0</div>
+          <div style="color:#64748b;margin-top:2px;">Risk bubble map · scatter_mapbox</div>
+        </div>
+        <div style="padding:8px 12px;background:#f8fafc;border-radius:6px;border:1px solid #e2e8f0;">
+          <div style="color:#1e293b;font-weight:600;">Python 3.12.3</div>
+          <div style="color:#64748b;margin-top:2px;">Runtime · all pipeline scripts</div>
+        </div>
+        <div style="padding:8px 12px;background:#f8fafc;border-radius:6px;border:1px solid #e2e8f0;border-top:1px solid #334155;">
+          <div style="color:#94a3b8;font-size:11px;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Data Sources</div>
+          <div style="color:#64748b;line-height:1.8;">
+            SCC DEH Food Inspections<br>
+            SJPD Crime Reports (260K)<br>
+            US Census ACS 2022<br>
+            CDC PLACES 2023
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- APPENDIX P: What's Next -->
+<div class="slide" id="sap">
+  <h3>Appendix P — What's Next</h3>
+  <div style="font-size:13px;color:#475569;margin-bottom:24px;">From hackathon prototype to county-scale infrastructure</div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;">
+
+    <!-- Near term -->
+    <div>
+      <div style="font-size:11px;color:#3b82f6;text-transform:uppercase;letter-spacing:2px;margin-bottom:14px;padding-bottom:8px;border-bottom:2px solid #3b82f6;">Near Term — Ship It</div>
+      <div style="display:grid;gap:10px;">
+        <div style="padding:14px;background:#f8fafc;border-radius:8px;border:1px solid #e2e8f0;">
+          <div style="color:#1e293b;font-weight:600;margin-bottom:4px;">Live data ingestion</div>
+          <div style="color:#64748b;font-size:13px;line-height:1.6;">Replace static CSVs with automated pulls from SCC Open Data Portal. Sentinel runs nightly on fresh data.</div>
+        </div>
+        <div style="padding:14px;background:#f8fafc;border-radius:8px;border:1px solid #e2e8f0;">
+          <div style="color:#1e293b;font-weight:600;margin-bottom:4px;">Resident chat interface</div>
+          <div style="color:#64748b;font-size:13px;line-height:1.6;">"Is it safe to eat at X?" — natural language queries answered by the agent with real inspection history.</div>
+        </div>
+        <div style="padding:14px;background:#f8fafc;border-radius:8px;border:1px solid #e2e8f0;">
+          <div style="color:#1e293b;font-weight:600;margin-bottom:4px;">Email / SMS delivery</div>
+          <div style="color:#64748b;font-size:13px;line-height:1.6;">Messenger agent fully wired — weekly briefs to Health Officer, inspection queue to supervisors, coaching to owners.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Medium term -->
+    <div>
+      <div style="font-size:11px;color:#eab308;text-transform:uppercase;letter-spacing:2px;margin-bottom:14px;padding-bottom:8px;border-bottom:2px solid #eab308;">Medium Term — Deepen the Signal</div>
+      <div style="display:grid;gap:10px;">
+        <div style="padding:14px;background:#f8fafc;border-radius:8px;border:1px solid #e2e8f0;">
+          <div style="color:#1e293b;font-weight:600;margin-bottom:4px;">Add more county datasets</div>
+          <div style="color:#64748b;font-size:13px;line-height:1.6;">Coroner (geocoded deaths), 311 complaints, code enforcement, eviction filings — every new layer sharpens the compound risk signal.</div>
+        </div>
+        <div style="padding:14px;background:#f8fafc;border-radius:8px;border:1px solid #e2e8f0;">
+          <div style="color:#1e293b;font-weight:600;margin-bottom:4px;">Temporal pattern detection</div>
+          <div style="color:#64748b;font-size:13px;line-height:1.6;">Track neighborhood trajectories over time — catch deteriorating ZIPs before they cross thresholds, not after.</div>
+        </div>
+        <div style="padding:14px;background:#f8fafc;border-radius:8px;border:1px solid #e2e8f0;">
+          <div style="color:#1e293b;font-weight:600;margin-bottom:4px;">Predictive violation modeling</div>
+          <div style="color:#64748b;font-size:13px;line-height:1.6;">Train on historical inspection sequences to predict which restaurants will fail next — shift from reactive to preventive.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Long term -->
+    <div>
+      <div style="font-size:11px;color:#22c55e;text-transform:uppercase;letter-spacing:2px;margin-bottom:14px;padding-bottom:8px;border-bottom:2px solid #22c55e;">Long Term — Expand the Model</div>
+      <div style="display:grid;gap:10px;">
+        <div style="padding:14px;background:#f8fafc;border-radius:8px;border:1px solid #e2e8f0;">
+          <div style="color:#1e293b;font-weight:600;margin-bottom:4px;">Any county, any state</div>
+          <div style="color:#64748b;font-size:13px;line-height:1.6;">The pipeline is geography-agnostic. Food inspection + census + crime data exists for every US county. One GB10 per jurisdiction.</div>
+        </div>
+        <div style="padding:14px;background:#f8fafc;border-radius:8px;border:1px solid #e2e8f0;">
+          <div style="color:#1e293b;font-weight:600;margin-bottom:4px;">Beyond food safety</div>
+          <div style="color:#64748b;font-size:13px;line-height:1.6;">Same architecture applies to housing code violations + evictions + school performance + environmental data — any set of siloed government datasets over shared geography.</div>
+        </div>
+        <div style="padding:14px;background:#f0fdf4;border-radius:8px;border:1px solid #bbf7d0;">
+          <div style="color:#22c55e;font-weight:600;margin-bottom:4px;">The real unlock: on-device AI for government</div>
+          <div style="color:#15803d;font-size:13px;line-height:1.6;">Sensitive civic data stays on-premise. The GB10 makes local LLM reasoning viable at government scale — no cloud, no compliance risk, no vendor dependency.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- APPENDIX S: User & Agent Guides -->
+<div class="slide" id="sas_toc">
+  <h3>Appendix S — User &amp; Agent Guides</h3>
+  <div class="spacer"></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:40px;font-size:15px;">
+    <div>
+      <div style="font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:2px;margin-bottom:16px;">Agent Guides</div>
+      <div style="display:grid;gap:10px;">
+        <div style="padding:12px 16px;border:1px solid #e2e8f0;border-radius:8px;border-left:4px solid #16a34a;">
+          <span style="color:#16a34a;font-weight:700;">S1 &nbsp;</span><span style="color:#1e293b;">SENTINEL — Triage Agent</span>
+          <div style="color:#94a3b8;font-size:12px;margin-top:2px;">What it monitors, when it fires, what to do with a flag</div>
+        </div>
+        <div style="padding:12px 16px;border:1px solid #e2e8f0;border-radius:8px;border-left:4px solid #7c3aed;">
+          <span style="color:#7c3aed;font-weight:700;">S2 &nbsp;</span><span style="color:#1e293b;">ANALYST — Deep Reasoning Agent</span>
+          <div style="color:#94a3b8;font-size:12px;margin-top:2px;">Input format, output sections, how to interpret severity</div>
+        </div>
+        <div style="padding:12px 16px;border:1px solid #e2e8f0;border-radius:8px;border-left:4px solid #2563eb;">
+          <span style="color:#2563eb;font-weight:700;">S3 &nbsp;</span><span style="color:#1e293b;">ADVISOR — Action Generator</span>
+          <div style="color:#94a3b8;font-size:12px;margin-top:2px;">Recipient profiles, output types, customization</div>
+        </div>
+        <div style="padding:12px 16px;border:1px solid #e2e8f0;border-radius:8px;border-left:4px solid #d97706;">
+          <span style="color:#d97706;font-weight:700;">S4 &nbsp;</span><span style="color:#1e293b;">MESSENGER — Routing Agent</span>
+          <div style="color:#94a3b8;font-size:12px;margin-top:2px;">Channel rules, urgency levels, follow-up tracking</div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div style="font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:2px;margin-bottom:16px;">User Guides</div>
+      <div style="display:grid;gap:10px;">
+        <div style="padding:12px 16px;border:1px solid #e2e8f0;border-radius:8px;border-left:4px solid #dc2626;">
+          <span style="color:#dc2626;font-weight:700;">S5 &nbsp;</span><span style="color:#1e293b;">County Health Officer</span>
+          <div style="color:#94a3b8;font-size:12px;margin-top:2px;">Weekly brief, forwarding workflow, escalation</div>
+        </div>
+        <div style="padding:12px 16px;border:1px solid #e2e8f0;border-radius:8px;border-left:4px solid #d97706;">
+          <span style="color:#d97706;font-weight:700;">S6 &nbsp;</span><span style="color:#1e293b;">Inspection Supervisor</span>
+          <div style="color:#94a3b8;font-size:12px;margin-top:2px;">Dashboard, priority queue, pre-visit briefs</div>
+        </div>
+        <div style="padding:12px 16px;border:1px solid #e2e8f0;border-radius:8px;border-left:4px solid #16a34a;">
+          <span style="color:#16a34a;font-weight:700;">S7 &nbsp;</span><span style="color:#1e293b;">Restaurant Owner</span>
+          <div style="color:#94a3b8;font-size:12px;margin-top:2px;">SMS opt-in, coaching messages, how to reply</div>
+        </div>
+        <div style="padding:12px 16px;border:1px solid #e2e8f0;border-radius:8px;border-left:4px solid #2563eb;">
+          <span style="color:#2563eb;font-weight:700;">S8 &nbsp;</span><span style="color:#1e293b;">Community Resident</span>
+          <div style="color:#94a3b8;font-size:12px;margin-top:2px;">Public web portal, what questions you can ask</div>
+        </div>
+        <div style="padding:12px 16px;border:1px solid #e2e8f0;border-radius:8px;border-left:4px solid #7c3aed;">
+          <span style="color:#7c3aed;font-weight:700;">S9 &nbsp;</span><span style="color:#1e293b;">County Supervisor</span>
+          <div style="color:#94a3b8;font-size:12px;margin-top:2px;">Monthly scorecard, board presentation format</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- APPENDIX S1: SENTINEL Agent Guide -->
+<div class="slide" id="sas1">
+  <h3>Agent Guide S1 — SENTINEL</h3>
+  <div class="spacer"></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:48px;">
+    <div>
+      <div style="border-left:4px solid #16a34a;padding-left:20px;margin-bottom:28px;">
+        <div style="font-size:20px;font-weight:600;color:#0f172a;">Purpose</div>
+        <p style="font-size:16px;margin-top:8px;">Fast triage across all 92 ZIP profiles. Filters noise from signal. Determines what's worth investigating.</p>
+      </div>
+      <div style="margin-bottom:20px;">
+        <div style="font-size:13px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px;">When it runs</div>
+        <div style="display:grid;gap:8px;font-size:15px;">
+          <div style="padding:10px 14px;background:#f8fafc;border-radius:8px;border:1px solid #e2e8f0;">🌙 &nbsp;<strong>Nightly batch</strong> — full scan, 3:00 AM daily</div>
+          <div style="padding:10px 14px;background:#f8fafc;border-radius:8px;border:1px solid #e2e8f0;">⚡ &nbsp;<strong>Real-time trigger</strong> — on new inspection result upload</div>
+          <div style="padding:10px 14px;background:#f8fafc;border-radius:8px;border:1px solid #e2e8f0;">👤 &nbsp;<strong>On-demand</strong> — supervisor requests spot-check of specific ZIP</div>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:13px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px;">Threshold logic</div>
+        <table style="width:100%;border-collapse:collapse;font-size:14px;">
+          <tr style="border-bottom:1px solid #e2e8f0;"><th style="text-align:left;padding:8px;color:#94a3b8;">Score</th><th style="text-align:left;padding:8px;color:#94a3b8;">Flag</th><th style="text-align:left;padding:8px;color:#94a3b8;">Action</th></tr>
+          <tr style="border-bottom:1px solid #f1f5f9;"><td style="padding:8px;color:#dc2626;font-weight:600;">≥ 70</td><td style="padding:8px;"><span style="background:#fee2e2;color:#dc2626;padding:2px 8px;border-radius:4px;font-size:12px;">FLAGGED</span></td><td style="padding:8px;color:#475569;">Passes to Analyst immediately</td></tr>
+          <tr style="border-bottom:1px solid #f1f5f9;"><td style="padding:8px;color:#d97706;font-weight:600;">50–69</td><td style="padding:8px;"><span style="background:#fef9c3;color:#d97706;padding:2px 8px;border-radius:4px;font-size:12px;">MONITOR</span></td><td style="padding:8px;color:#475569;">Weekly report, no immediate alert</td></tr>
+          <tr><td style="padding:8px;color:#16a34a;font-weight:600;">&lt; 50</td><td style="padding:8px;"><span style="background:#dcfce7;color:#16a34a;padding:2px 8px;border-radius:4px;font-size:12px;">OK</span></td><td style="padding:8px;color:#475569;">No action, included in monthly summary</td></tr>
+        </table>
+      </div>
+    </div>
+    <div>
+      <div style="font-size:13px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px;">Output format</div>
+      <div style="background:#0f172a;border-radius:10px;padding:20px;font-family:monospace;font-size:13px;line-height:1.8;color:#94a3b8;">
+        <span style="color:#16a34a;">SEVERITY:</span> 4<br>
+        <span style="color:#16a34a;">FLAG:</span> <span style="color:#dc2626;">YES</span><br>
+        <span style="color:#16a34a;">REASON:</span> ZIP 95122 has 4 repeat offenders<br>
+        &nbsp;&nbsp;combined with 10.5% poverty rate and<br>
+        &nbsp;&nbsp;4,187 crime incidents — compounding<br>
+        &nbsp;&nbsp;risk pattern across all 4 dimensions.<br>
+        <span style="color:#16a34a;">TOP_CONCERN:</span> Banh Mi Oven has failed<br>
+        &nbsp;&nbsp;9 consecutive inspections. Pattern<br>
+        &nbsp;&nbsp;suggests systemic, not accidental.
+      </div>
+      <div style="margin-top:20px;">
+        <div style="font-size:13px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px;">What to do with a flag</div>
+        <div style="display:grid;gap:8px;font-size:14px;color:#475569;">
+          <div style="display:grid;grid-template-columns:24px 1fr;gap:8px;align-items:start;">
+            <span style="color:#16a34a;font-weight:700;">1.</span>
+            <span>Sentinel automatically passes the flag to Analyst — no action needed for routine cases</span>
+          </div>
+          <div style="display:grid;grid-template-columns:24px 1fr;gap:8px;align-items:start;">
+            <span style="color:#16a34a;font-weight:700;">2.</span>
+            <span>Supervisor can override threshold (via dashboard) to force Analyst on any ZIP</span>
+          </div>
+          <div style="display:grid;grid-template-columns:24px 1fr;gap:8px;align-items:start;">
+            <span style="color:#16a34a;font-weight:700;">3.</span>
+            <span>SEVERITY 5 always triggers immediate notification — Messenger bypasses queue</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- APPENDIX S2: ANALYST Agent Guide -->
+<div class="slide" id="sas2">
+  <h3>Agent Guide S2 — ANALYST</h3>
+  <div class="spacer"></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:48px;">
+    <div>
+      <div style="border-left:4px solid #7c3aed;padding-left:20px;margin-bottom:24px;">
+        <div style="font-size:20px;font-weight:600;color:#0f172a;">Purpose</div>
+        <p style="font-size:16px;margin-top:8px;">Deep cross-silo reasoning on flagged ZIPs. Answers: How bad? Why? Who's affected? What needs to happen?</p>
+      </div>
+      <div style="font-size:13px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px;">Input context (what it receives)</div>
+      <div style="display:grid;gap:6px;font-size:14px;margin-bottom:20px;">
+        <div style="padding:8px 12px;background:#f8fafc;border-radius:6px;border:1px solid #e2e8f0;color:#475569;">Sentinel output (severity, reason, top concern)</div>
+        <div style="padding:8px 12px;background:#f8fafc;border-radius:6px;border:1px solid #e2e8f0;color:#475569;">Full ZIP risk profile (all 12 metrics)</div>
+        <div style="padding:8px 12px;background:#f8fafc;border-radius:6px;border:1px solid #e2e8f0;color:#475569;">Top 3 violators with inspection history</div>
+        <div style="padding:8px 12px;background:#f8fafc;border-radius:6px;border:1px solid #e2e8f0;color:#475569;">County benchmark averages for comparison</div>
+        <div style="padding:8px 12px;background:#f8fafc;border-radius:6px;border:1px solid #e2e8f0;color:#475569;">CDC health context for the tract</div>
+      </div>
+      <div style="font-size:13px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px;">Reading the severity scale</div>
+      <table style="width:100%;border-collapse:collapse;font-size:13px;">
+        <tr style="border-bottom:1px solid #e2e8f0;"><th style="padding:6px 8px;text-align:left;color:#94a3b8;">Level</th><th style="padding:6px 8px;text-align:left;color:#94a3b8;">Meaning</th><th style="padding:6px 8px;text-align:left;color:#94a3b8;">Expected response</th></tr>
+        <tr style="border-bottom:1px solid #f1f5f9;"><td style="padding:6px 8px;color:#dc2626;font-weight:700;">5</td><td style="padding:6px 8px;color:#475569;">Cross-agency action needed immediately</td><td style="padding:6px 8px;color:#475569;">Health Officer brief same day</td></tr>
+        <tr style="border-bottom:1px solid #f1f5f9;"><td style="padding:6px 8px;color:#d97706;font-weight:700;">4</td><td style="padding:6px 8px;color:#475569;">Compounding risk confirmed</td><td style="padding:6px 8px;color:#475569;">Weekly brief + inspection reprioritized</td></tr>
+        <tr style="border-bottom:1px solid #f1f5f9;"><td style="padding:6px 8px;color:#d97706;font-weight:700;">3</td><td style="padding:6px 8px;color:#475569;">Elevated, one major signal</td><td style="padding:6px 8px;color:#475569;">Supervisor notified, monitoring</td></tr>
+        <tr><td style="padding:6px 8px;color:#16a34a;font-weight:700;">1–2</td><td style="padding:6px 8px;color:#475569;">Within normal range</td><td style="padding:6px 8px;color:#475569;">Monthly summary only</td></tr>
+      </table>
+    </div>
+    <div>
+      <div style="font-size:13px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px;">Output sections</div>
+      <div style="display:grid;gap:8px;font-size:14px;">
+        <div style="padding:12px;background:#faf5ff;border:1px solid #e9d5ff;border-radius:8px;">
+          <div style="color:#7c3aed;font-weight:600;margin-bottom:4px;">1. SEVERITY</div>
+          <div style="color:#475569;">Final severity score with justification. Overrides Sentinel if Analyst finds more/less than expected.</div>
+        </div>
+        <div style="padding:12px;background:#faf5ff;border:1px solid #e9d5ff;border-radius:8px;">
+          <div style="color:#7c3aed;font-weight:600;margin-bottom:4px;">2. ROOT CAUSES</div>
+          <div style="color:#475569;">Systemic factors behind the pattern — not just "they failed inspection" but why the failures cluster here.</div>
+        </div>
+        <div style="padding:12px;background:#faf5ff;border:1px solid #e9d5ff;border-radius:8px;">
+          <div style="color:#7c3aed;font-weight:600;margin-bottom:4px;">3. AFFECTED POPULATION</div>
+          <div style="color:#475569;">Estimated residents at risk, demographic vulnerability indicators, health burden context.</div>
+        </div>
+        <div style="padding:12px;background:#faf5ff;border:1px solid #e9d5ff;border-radius:8px;">
+          <div style="color:#7c3aed;font-weight:600;margin-bottom:4px;">4. CROSS-SILO INSIGHT</div>
+          <div style="color:#475569;">What only the combined dataset reveals — the key reason single-agency view was insufficient.</div>
+        </div>
+        <div style="padding:12px;background:#faf5ff;border:1px solid #e9d5ff;border-radius:8px;">
+          <div style="color:#7c3aed;font-weight:600;margin-bottom:4px;">5. 30-DAY PRIORITIES</div>
+          <div style="color:#475569;">Three specific actions with named responsible parties. Passed directly to Advisor for output generation.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- APPENDIX S3: ADVISOR Agent Guide -->
+<div class="slide" id="sas3">
+  <h3>Agent Guide S3 — ADVISOR</h3>
+  <div class="spacer"></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:48px;">
+    <div>
+      <div style="border-left:4px solid #2563eb;padding-left:20px;margin-bottom:24px;">
+        <div style="font-size:20px;font-weight:600;color:#0f172a;">Purpose</div>
+        <p style="font-size:16px;margin-top:8px;">Translates Analyst findings into tailored, actionable outputs for each recipient type. The same risk → 5 different messages.</p>
+      </div>
+      <div style="font-size:13px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:12px;">Recipient profiles</div>
+      <div style="display:grid;gap:8px;font-size:13px;">
+        <div style="display:grid;grid-template-columns:140px 1fr;gap:12px;padding:10px;background:#f8fafc;border-radius:8px;border:1px solid #e2e8f0;align-items:start;">
+          <div style="color:#dc2626;font-weight:600;">County Health Officer</div>
+          <div style="color:#475569;">Needs: cross-dept framing, decision points, board-ready language. Format: 1-page brief, bullet recommendations.</div>
+        </div>
+        <div style="display:grid;grid-template-columns:140px 1fr;gap:12px;padding:10px;background:#f8fafc;border-radius:8px;border:1px solid #e2e8f0;align-items:start;">
+          <div style="color:#d97706;font-weight:600;">Insp. Supervisor</div>
+          <div style="color:#475569;">Needs: ranked queue, pre-visit context, specific violation patterns. Format: dashboard list + briefs.</div>
+        </div>
+        <div style="display:grid;grid-template-columns:140px 1fr;gap:12px;padding:10px;background:#f8fafc;border-radius:8px;border:1px solid #e2e8f0;align-items:start;">
+          <div style="color:#16a34a;font-weight:600;">Restaurant Owner</div>
+          <div style="color:#475569;">Needs: plain language, specific fixes, actionable steps. Format: SMS checklist, conversational Q&amp;A.</div>
+        </div>
+        <div style="display:grid;grid-template-columns:140px 1fr;gap:12px;padding:10px;background:#f8fafc;border-radius:8px;border:1px solid #e2e8f0;align-items:start;">
+          <div style="color:#2563eb;font-weight:600;">Resident</div>
+          <div style="color:#475569;">Needs: simple safety answer, alternatives. Format: conversational web chat, no jargon.</div>
+        </div>
+        <div style="display:grid;grid-template-columns:140px 1fr;gap:12px;padding:10px;background:#f8fafc;border-radius:8px;border:1px solid #e2e8f0;align-items:start;">
+          <div style="color:#7c3aed;font-weight:600;">County Supervisor</div>
+          <div style="color:#475569;">Needs: district comparison, budget framing, political talking points. Format: PDF scorecard.</div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div style="font-size:13px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:12px;">How output gets shaped</div>
+      <div style="font-size:14px;color:#475569;line-height:1.8;margin-bottom:20px;">
+        Each recipient receives the same underlying finding, but the Advisor:<br><br>
+        • Changes <strong style="color:#1e293b;">vocabulary</strong> (technical → plain language for owners/residents)<br>
+        • Changes <strong style="color:#1e293b;">scope</strong> (single restaurant for supervisor vs. district view for elected)<br>
+        • Changes <strong style="color:#1e293b;">ask</strong> (Health Officer: approve surge vs. Owner: fix cooler temp)<br>
+        • Changes <strong style="color:#1e293b;">urgency framing</strong> (immediate brief vs. scheduled report)
+      </div>
+      <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:20px;">
+        <div style="font-size:13px;font-weight:600;color:#2563eb;margin-bottom:12px;">EXAMPLE: Same ZIP 95122 finding →</div>
+        <div style="display:grid;gap:8px;font-size:13px;">
+          <div style="color:#dc2626;"><strong>Health Officer:</strong> <span style="color:#475569;">"Recommend cross-department surge — DEH, Sheriff, Public Health. 210K residents at risk."</span></div>
+          <div style="color:#d97706;"><strong>Supervisor:</strong> <span style="color:#475569;">"Banh Mi Oven is #1 priority. Pre-visit brief: temp control and TPHC labeling."</span></div>
+          <div style="color:#16a34a;"><strong>Owner:</strong> <span style="color:#475569;">"Your cooler was 46°F. It needs to be ≤41°F. Check thermostat and door seals before inspection."</span></div>
+          <div style="color:#2563eb;"><strong>Resident:</strong> <span style="color:#475569;">"Banh Mi Oven has failed 9 inspections. Here are 3 safer alternatives nearby."</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- APPENDIX S4: MESSENGER Agent Guide -->
+<div class="slide" id="sas4">
+  <h3>Agent Guide S4 — MESSENGER</h3>
+  <div class="spacer"></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:48px;">
+    <div>
+      <div style="border-left:4px solid #d97706;padding-left:20px;margin-bottom:24px;">
+        <div style="font-size:20px;font-weight:600;color:#0f172a;">Purpose</div>
+        <p style="font-size:16px;margin-top:8px;">Routes Advisor outputs to the right person, via the right channel, at the right time. Tracks delivery and follow-up.</p>
+      </div>
+      <div style="font-size:13px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:12px;">Routing rules</div>
+      <table style="width:100%;border-collapse:collapse;font-size:13px;">
+        <tr style="border-bottom:2px solid #e2e8f0;"><th style="padding:8px;text-align:left;color:#94a3b8;">Urgency</th><th style="padding:8px;text-align:left;color:#94a3b8;">Channel</th><th style="padding:8px;text-align:left;color:#94a3b8;">Timing</th></tr>
+        <tr style="border-bottom:1px solid #f1f5f9;"><td style="padding:8px;"><span style="background:#fee2e2;color:#dc2626;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;">IMMEDIATE</span></td><td style="padding:8px;color:#475569;">Email + dashboard alert</td><td style="padding:8px;color:#475569;">Within 5 minutes</td></tr>
+        <tr style="border-bottom:1px solid #f1f5f9;"><td style="padding:8px;"><span style="background:#fef9c3;color:#d97706;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;">MORNING</span></td><td style="padding:8px;color:#475569;">Dashboard queue</td><td style="padding:8px;color:#475569;">Ready by 7:30 AM</td></tr>
+        <tr style="border-bottom:1px solid #f1f5f9;"><td style="padding:8px;"><span style="background:#dcfce7;color:#16a34a;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;">SCHEDULED</span></td><td style="padding:8px;color:#475569;">SMS or email</td><td style="padding:8px;color:#475569;">Pre-set window</td></tr>
+        <tr><td style="padding:8px;"><span style="background:#dbeafe;color:#2563eb;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;">ON-DEMAND</span></td><td style="padding:8px;color:#475569;">Web chat</td><td style="padding:8px;color:#475569;">Real-time response</td></tr>
+      </table>
+      <div style="margin-top:20px;font-size:13px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px;">Follow-up tracking</div>
+      <div style="display:grid;gap:6px;font-size:14px;color:#475569;">
+        <div>• Records delivery confirmation for all channels</div>
+        <div>• Tracks open/read status for email outputs</div>
+        <div>• Schedules reminder if Health Officer brief not actioned within 48h</div>
+        <div>• Logs all owner SMS replies for Analyst context in next cycle</div>
+      </div>
+    </div>
+    <div>
+      <div style="font-size:13px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:12px;">Channel specifications</div>
+      <div style="display:grid;gap:12px;">
+        <div style="padding:14px;background:#fff1f2;border:1px solid #fecaca;border-radius:8px;">
+          <div style="color:#dc2626;font-weight:600;margin-bottom:6px;">📧 Email (Health Officer)</div>
+          <div style="font-size:13px;color:#475569;line-height:1.7;">HTML formatted. 2-section layout: executive summary + recommended actions. PDF brief attached. Forwarding link included for cross-dept sharing.</div>
+        </div>
+        <div style="padding:14px;background:#fefce8;border:1px solid #fef08a;border-radius:8px;">
+          <div style="color:#d97706;font-weight:600;margin-bottom:6px;">🖥 Dashboard (Supervisor)</div>
+          <div style="font-size:13px;color:#475569;line-height:1.7;">Ranked queue updated each morning. One-click inspector assignment. Pre-visit brief expands inline. All-time violation history accessible.</div>
+        </div>
+        <div style="padding:14px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;">
+          <div style="color:#16a34a;font-weight:600;margin-bottom:6px;">💬 SMS (Restaurant Owner)</div>
+          <div style="font-size:13px;color:#475569;line-height:1.7;">Opt-in via DEH registration. Two-way: owner replies trigger Advisor for follow-up answers. Max 3 coaching messages per inspection cycle.</div>
+        </div>
+        <div style="padding:14px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;">
+          <div style="color:#2563eb;font-weight:600;margin-bottom:6px;">🌐 Web Chat (Resident)</div>
+          <div style="font-size:13px;color:#475569;line-height:1.7;">Public portal. No login. Natural language queries about any restaurant or neighborhood. Returns inspection history, risk context, and safe alternatives.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- APPENDIX S5: County Health Officer Guide -->
+<div class="slide" id="sas5">
+  <h3>User Guide S5 — County Health Officer</h3>
+  <div class="spacer"></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:48px;">
+    <div>
+      <div style="border-left:4px solid #dc2626;padding-left:20px;margin-bottom:24px;">
+        <div style="font-size:20px;font-weight:600;color:#0f172a;">What you receive</div>
+        <p style="font-size:16px;margin-top:8px;">A weekly risk brief every Monday morning summarizing which neighborhoods crossed compounding risk thresholds, why, and what cross-department action is recommended.</p>
+      </div>
+      <div style="font-size:13px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:12px;">Weekly brief structure</div>
+      <div style="display:grid;gap:8px;font-size:14px;">
+        <div style="padding:10px 14px;background:#fff1f2;border-radius:8px;border-left:3px solid #dc2626;">
+          <strong style="color:#dc2626;">Section 1: Executive Summary</strong>
+          <div style="color:#475569;margin-top:4px;">Number of ZIPs flagged, highest severity, key metric driving this week's alerts</div>
+        </div>
+        <div style="padding:10px 14px;background:#f8fafc;border-radius:8px;border-left:3px solid #e2e8f0;">
+          <strong style="color:#1e293b;">Section 2: Per-ZIP Profiles</strong>
+          <div style="color:#475569;margin-top:4px;">One page per flagged ZIP: data snapshot, Analyst findings, cross-silo insight</div>
+        </div>
+        <div style="padding:10px 14px;background:#f8fafc;border-radius:8px;border-left:3px solid #e2e8f0;">
+          <strong style="color:#1e293b;">Section 3: Recommended Actions</strong>
+          <div style="color:#475569;margin-top:4px;">Specific asks for DEH, Sheriff, and Public Health — with measurable outcomes</div>
+        </div>
+        <div style="padding:10px 14px;background:#f0fdf4;border-radius:8px;border-left:3px solid #16a34a;">
+          <strong style="color:#16a34a;">Section 4: Resource Estimate</strong>
+          <div style="color:#475569;margin-top:4px;">Staffing or budget needed for intervention, framed for supervisor approval</div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div style="font-size:13px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:12px;">Typical workflow</div>
+      <div style="display:grid;gap:10px;font-size:14px;">
+        <div style="display:grid;grid-template-columns:32px 1fr;gap:10px;align-items:start;">
+          <div style="background:#dc2626;color:#ffffff;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;">1</div>
+          <div style="color:#475569;padding-top:4px;">Open weekly brief Monday AM — review top 3 flagged ZIPs and severity levels</div>
+        </div>
+        <div style="display:grid;grid-template-columns:32px 1fr;gap:10px;align-items:start;">
+          <div style="background:#dc2626;color:#ffffff;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;">2</div>
+          <div style="color:#475569;padding-top:4px;">For SEVERITY 4–5: forward Advisor brief to relevant department leads with one click</div>
+        </div>
+        <div style="display:grid;grid-template-columns:32px 1fr;gap:10px;align-items:start;">
+          <div style="background:#dc2626;color:#ffffff;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;">3</div>
+          <div style="color:#475569;padding-top:4px;">Approve or modify the recommended cross-department intervention plan</div>
+        </div>
+        <div style="display:grid;grid-template-columns:32px 1fr;gap:10px;align-items:start;">
+          <div style="background:#dc2626;color:#ffffff;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;">4</div>
+          <div style="color:#475569;padding-top:4px;">Receive follow-up summary 30 days after intervention — did outcomes improve?</div>
+        </div>
+      </div>
+      <div style="margin-top:24px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:16px;">
+        <div style="font-size:13px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px;">Ad-hoc queries</div>
+        <div style="font-size:14px;color:#475569;">You can request an on-demand analysis of any ZIP at any time via the dashboard. Type "Analyze ZIP 95116" and Sentinel + Analyst will run within 2 minutes.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- APPENDIX S6: Inspection Supervisor Guide -->
+<div class="slide" id="sas6">
+  <h3>User Guide S6 — Inspection Supervisor</h3>
+  <div class="spacer"></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:48px;">
+    <div>
+      <div style="border-left:4px solid #d97706;padding-left:20px;margin-bottom:24px;">
+        <div style="font-size:20px;font-weight:600;color:#0f172a;">What you receive</div>
+        <p style="font-size:16px;margin-top:8px;">A prioritized inspection queue each morning, pre-ranked by compounding risk score. Each entry includes a pre-visit brief built from violation history.</p>
+      </div>
+      <div style="font-size:13px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:12px;">Dashboard features</div>
+      <div style="display:grid;gap:8px;font-size:14px;">
+        <div style="padding:10px 14px;background:#fefce8;border-radius:8px;border-left:3px solid #d97706;">
+          <strong style="color:#d97706;">Priority Queue</strong>
+          <div style="color:#475569;margin-top:4px;">All upcoming inspections ranked by risk. Red-flagged businesses at top. Drag to reorder if needed.</div>
+        </div>
+        <div style="padding:10px 14px;background:#f8fafc;border-radius:8px;border-left:3px solid #e2e8f0;">
+          <strong style="color:#1e293b;">Pre-Visit Brief</strong>
+          <div style="color:#475569;margin-top:4px;">Click any business to see: top 3 most likely violations, prior inspection timeline, business profile.</div>
+        </div>
+        <div style="padding:10px 14px;background:#f8fafc;border-radius:8px;border-left:3px solid #e2e8f0;">
+          <strong style="color:#1e293b;">Inspector Assignment</strong>
+          <div style="color:#475569;margin-top:4px;">One-click assign to available inspector. CivicPulse recommends senior inspector for SEVERITY 4+.</div>
+        </div>
+        <div style="padding:10px 14px;background:#f8fafc;border-radius:8px;border-left:3px solid #e2e8f0;">
+          <strong style="color:#1e293b;">Repeat Offender Alert</strong>
+          <div style="color:#475569;margin-top:4px;">Businesses with 2+ Red inspections are flagged. You can request escalation to Health Officer directly.</div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div style="font-size:13px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:12px;">Pre-visit brief example</div>
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:16px;font-size:13px;">
+        <div style="font-weight:700;color:#dc2626;font-size:15px;margin-bottom:4px;">Banh Mi Oven — 95122</div>
+        <div style="color:#94a3b8;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid #e2e8f0;">Assigned: Senior Inspector Chen | Tue 9:00 AM</div>
+        <div style="margin-bottom:10px;">
+          <div style="color:#475569;font-weight:600;margin-bottom:6px;">Focus areas (based on 9 prior Red inspections):</div>
+          <div style="display:grid;gap:4px;color:#475569;">
+            <div style="padding:6px 10px;background:#fff1f2;border-radius:4px;">🌡 Hot/cold holding temps — 7 of 9 failures involved this</div>
+            <div style="padding:6px 10px;background:#fefce8;border-radius:4px;">🏷 TPHC time marking — labels missing repeatedly</div>
+            <div style="padding:6px 10px;background:#f8fafc;border-radius:4px;">🚿 Handwash sink — soap/towels absent in 3 inspections</div>
+          </div>
+        </div>
+        <div style="color:#94a3b8;font-size:12px;">Last inspection: Red (July 2025) · 23 critical violations on record · Poverty rate: 10.5%</div>
+      </div>
+      <div style="margin-top:16px;background:#fefce8;border:1px solid #fef08a;border-radius:10px;padding:16px;">
+        <div style="font-size:13px;font-weight:600;color:#d97706;margin-bottom:8px;">What happens after inspection</div>
+        <div style="font-size:14px;color:#475569;line-height:1.7;">Results auto-sync to CivicPulse. If result is Red again, Sentinel re-evaluates the ZIP and notifies Health Officer. If result is Green, the business is removed from the priority queue for 6 months.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- APPENDIX S7: Restaurant Owner Guide -->
+<div class="slide" id="sas7">
+  <h3>User Guide S7 — Restaurant Owner</h3>
+  <div class="spacer"></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:48px;">
+    <div>
+      <div style="border-left:4px solid #16a34a;padding-left:20px;margin-bottom:24px;">
+        <div style="font-size:20px;font-weight:600;color:#0f172a;">What you receive</div>
+        <p style="font-size:16px;margin-top:8px;">A proactive SMS coaching message 7 days before your scheduled inspection, built from your specific violation history — not generic advice.</p>
+      </div>
+      <div style="font-size:13px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:12px;">How to opt in</div>
+      <div style="display:grid;gap:8px;font-size:14px;margin-bottom:20px;">
+        <div style="padding:10px 14px;background:#f0fdf4;border-radius:8px;border-left:3px solid #16a34a;">
+          <strong style="color:#16a34a;">Option 1:</strong> <span style="color:#475569;">Text "JOIN" to (408) 299-2100 with your DEH permit number</span>
+        </div>
+        <div style="padding:10px 14px;background:#f8fafc;border-radius:8px;border-left:3px solid #e2e8f0;">
+          <strong style="color:#1e293b;">Option 2:</strong> <span style="color:#475569;">Enroll through the DEH online portal at deh.sccgov.org</span>
+        </div>
+        <div style="padding:10px 14px;background:#f8fafc;border-radius:8px;border-left:3px solid #e2e8f0;">
+          <strong style="color:#1e293b;">Option 3:</strong> <span style="color:#475569;">Inspector provides enrollment card during your next inspection visit</span>
+        </div>
+      </div>
+      <div style="font-size:13px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:12px;">What the message includes</div>
+      <div style="display:grid;gap:6px;font-size:14px;color:#475569;">
+        <div>✓ Your top 3 most likely violations based on history</div>
+        <div>✓ Specific corrective steps for each (not generic)</div>
+        <div>✓ Reference to your last inspection result</div>
+        <div>✓ Instructions to reply for follow-up questions</div>
+      </div>
+    </div>
+    <div>
+      <div style="font-size:13px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:12px;">Two-way SMS interaction</div>
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:16px;font-size:13px;">
+        <div style="color:#94a3b8;font-size:11px;text-align:center;margin-bottom:12px;">(408) 299-2100 · CivicPulse</div>
+        <div style="background:#e2e8f0;border-radius:10px 10px 10px 3px;padding:10px 12px;max-width:85%;margin-bottom:8px;color:#1e293b;line-height:1.6;">
+          Inspection next week. Top concerns: (1) Hot holding temps — need ≤41°F. (2) TPHC time labels. (3) Handwash sink supplies. Reply HELP for details on any.
+        </div>
+        <div style="background:#16a34a;border-radius:10px 10px 3px 10px;padding:10px 12px;margin-left:auto;max-width:65%;color:#ffffff;margin-bottom:8px;">HELP 1</div>
+        <div style="background:#e2e8f0;border-radius:10px 10px 10px 3px;padding:10px 12px;max-width:85%;color:#1e293b;line-height:1.6;margin-bottom:8px;">
+          Hot holding: All cooked food must stay at 135°F or above. Cold holding: 41°F or below. Your reach-in cooler was at 46°F in July. Check thermostat setting and door seal condition.
+        </div>
+        <div style="background:#16a34a;border-radius:10px 10px 3px 10px;padding:10px 12px;margin-left:auto;max-width:65%;color:#ffffff;">Thanks!</div>
+      </div>
+      <div style="margin-top:14px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:14px;">
+        <div style="font-size:13px;font-weight:600;color:#16a34a;margin-bottom:6px;">Privacy &amp; data use</div>
+        <div style="font-size:13px;color:#475569;">Messages use only your publicly available DEH inspection records. No private business data is shared. Opt out anytime by replying STOP.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- APPENDIX S8: Resident Guide -->
+<div class="slide" id="sas8">
+  <h3>User Guide S8 — Community Resident</h3>
+  <div class="spacer"></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:48px;">
+    <div>
+      <div style="border-left:4px solid #2563eb;padding-left:20px;margin-bottom:24px;">
+        <div style="font-size:20px;font-weight:600;color:#0f172a;">What you can do</div>
+        <p style="font-size:16px;margin-top:8px;">Ask any question about restaurant safety or neighborhood food risk at <strong>civicpulse.scc.gov/check</strong>. No login, no form. Just ask.</p>
+      </div>
+      <div style="font-size:13px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:12px;">What you can ask</div>
+      <div style="display:grid;gap:8px;font-size:14px;">
+        <div style="padding:10px 14px;background:#eff6ff;border-radius:8px;border-left:3px solid #2563eb;">
+          <strong style="color:#2563eb;">Restaurant safety:</strong>
+          <div style="color:#475569;margin-top:2px;">"Is [restaurant name] safe to eat at?" → Inspection history, violations, risk rating</div>
+        </div>
+        <div style="padding:10px 14px;background:#f8fafc;border-radius:8px;border-left:3px solid #e2e8f0;">
+          <strong style="color:#1e293b;">Neighborhood check:</strong>
+          <div style="color:#475569;margin-top:2px;">"What restaurants in 95122 have clean inspection records?" → Green-rated list nearby</div>
+        </div>
+        <div style="padding:10px 14px;background:#f8fafc;border-radius:8px;border-left:3px solid #e2e8f0;">
+          <strong style="color:#1e293b;">Risk context:</strong>
+          <div style="color:#475569;margin-top:2px;">"How does my neighborhood compare to the rest of the county?" → ZIP risk score and rank</div>
+        </div>
+        <div style="padding:10px 14px;background:#f8fafc;border-radius:8px;border-left:3px solid #e2e8f0;">
+          <strong style="color:#1e293b;">Alternatives:</strong>
+          <div style="color:#475569;margin-top:2px;">"What are safe Vietnamese restaurants near Story Rd?" → Top-rated by inspection record within 1mi</div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div style="font-size:13px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:12px;">What you will NOT see</div>
+      <div style="display:grid;gap:8px;font-size:14px;margin-bottom:20px;">
+        <div style="padding:10px 14px;background:#f8fafc;border-radius:8px;color:#475569;">✗ Raw violation codes or regulatory language — plain English only</div>
+        <div style="padding:10px 14px;background:#f8fafc;border-radius:8px;color:#475569;">✗ Pending or unresolved complaints — only confirmed inspection records</div>
+        <div style="padding:10px 14px;background:#f8fafc;border-radius:8px;color:#475569;">✗ Owner contact details or business financials</div>
+      </div>
+      <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:16px;">
+        <div style="font-size:13px;font-weight:600;color:#2563eb;margin-bottom:8px;">How the agent answers</div>
+        <div style="font-size:14px;color:#475569;line-height:1.7;">The Advisor agent answers using the most recent inspection data available, explains the risk in plain language, and always offers safer alternatives if the answer is concerning. It won't say "I can't answer that" — if there's relevant public data, it will use it.</div>
+      </div>
+      <div style="margin-top:14px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:14px;">
+        <div style="font-size:13px;font-weight:600;color:#16a34a;margin-bottom:6px;">Available in Spanish &amp; Vietnamese</div>
+        <div style="font-size:13px;color:#475569;">The chat interface auto-detects language and responds in kind. Core target neighborhoods (95116, 95122) are majority Spanish and Vietnamese speaking.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- APPENDIX S9: County Supervisor Guide -->
+<div class="slide" id="sas9">
+  <h3>User Guide S9 — County Supervisor</h3>
+  <div class="spacer"></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:48px;">
+    <div>
+      <div style="border-left:4px solid #7c3aed;padding-left:20px;margin-bottom:24px;">
+        <div style="font-size:20px;font-weight:600;color:#0f172a;">What you receive</div>
+        <p style="font-size:16px;margin-top:8px;">A monthly District Scorecard PDF showing how your district's food safety, crime, and economic vulnerability compare to the rest of the county — with board-ready talking points.</p>
+      </div>
+      <div style="font-size:13px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:12px;">Scorecard structure</div>
+      <div style="display:grid;gap:8px;font-size:14px;">
+        <div style="padding:10px 14px;background:#faf5ff;border-radius:8px;border-left:3px solid #7c3aed;">
+          <strong style="color:#7c3aed;">District overview</strong>
+          <div style="color:#475569;margin-top:2px;">Population, businesses, median income vs. county — one page, one look</div>
+        </div>
+        <div style="padding:10px 14px;background:#f8fafc;border-radius:8px;border-left:3px solid #e2e8f0;">
+          <strong style="color:#1e293b;">Risk concentration</strong>
+          <div style="color:#475569;margin-top:2px;">Your district's share of county-wide Red inspections, critical violations, repeat offenders — with trend vs. prior month</div>
+        </div>
+        <div style="padding:10px 14px;background:#f8fafc;border-radius:8px;border-left:3px solid #e2e8f0;">
+          <strong style="color:#1e293b;">Top ZIP profiles</strong>
+          <div style="color:#475569;margin-top:2px;">Up to 3 highest-risk ZIP codes in your district with data summary</div>
+        </div>
+        <div style="padding:10px 14px;background:#f0fdf4;border-radius:8px;border-left:3px solid #16a34a;">
+          <strong style="color:#16a34a;">Board talking points</strong>
+          <div style="color:#475569;margin-top:2px;">Advisor-generated 2-sentence framing for use at next Board of Supervisors meeting</div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div style="font-size:13px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:12px;">Example scorecard excerpt</div>
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:16px;font-size:13px;">
+        <div style="color:#7c3aed;font-weight:700;font-size:15px;margin-bottom:4px;">District 3 — March 2026</div>
+        <div style="color:#94a3b8;font-size:11px;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid #e2e8f0;">Covers East San Jose · Milpitas · Prepared by CivicPulse</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;font-size:12px;">
+          <div style="padding:8px;background:#fff1f2;border-radius:6px;text-align:center;">
+            <div style="color:#dc2626;font-size:20px;font-weight:700;">34%</div>
+            <div style="color:#94a3b8;">of county Red inspections</div>
+          </div>
+          <div style="padding:8px;background:#fefce8;border-radius:6px;text-align:center;">
+            <div style="color:#d97706;font-size:20px;font-weight:700;">19%</div>
+            <div style="color:#94a3b8;">of county restaurants</div>
+          </div>
+          <div style="padding:8px;background:#f8fafc;border-radius:6px;text-align:center;">
+            <div style="color:#1e293b;font-size:20px;font-weight:700;">$95K</div>
+            <div style="color:#94a3b8;">median income (vs $153K county)</div>
+          </div>
+          <div style="padding:8px;background:#f8fafc;border-radius:6px;text-align:center;">
+            <div style="color:#1e293b;font-size:20px;font-weight:700;">253K</div>
+            <div style="color:#94a3b8;">residents affected</div>
+          </div>
+        </div>
+        <div style="background:#f0fdf4;border-left:3px solid #16a34a;padding:10px 12px;border-radius:0 6px 6px 0;font-size:12px;color:#15803d;line-height:1.6;">
+          <strong>Board talking point:</strong> "District 3 bears 34% of the county's repeat food safety failures with only 19% of its restaurants — a structural inequity that requires cross-agency response, not just more inspections."
+        </div>
+      </div>
+      <div style="margin-top:14px;background:#faf5ff;border:1px solid #e9d5ff;border-radius:10px;padding:14px;">
+        <div style="font-size:13px;font-weight:600;color:#7c3aed;margin-bottom:6px;">Requesting a custom analysis</div>
+        <div style="font-size:13px;color:#475569;">Contact your district liaison to request a ZIP-level deep-dive before a board meeting, budget hearing, or community town hall.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- APPENDIX 2 — OPTIONAL / DISCARDABLE SLIDES -->
+<!-- ============================================================ -->
+
+<!-- APPENDIX 2A: Health Equity Gap (context only, not a finding) -->
+<div class="slide" id="sb1">
+  <h3>Appendix 2A — Health Context <span style="color:#475569;font-weight:400;font-size:14px;">(background, not a product finding)</span></h3>
+  <div class="spacer"></div>
+  <h1>The people who can least afford to get sick<br>eat at the most dangerous restaurants.</h1>
+  <div class="spacer-lg"></div>
+  <p>Food-insecure census tracts vs. food-secure tracts (960K residents in each group):</p>
+  <div class="spacer"></div>
+  <div class="four-col">
+    <div class="card">
+      <div class="stat red">+28%</div>
+      <h4>More Diabetes</h4>
+      <p>11.6% vs 9.1%</p>
+    </div>
+    <div class="card">
+      <div class="stat red">+23%</div>
+      <h4>More Obesity</h4>
+      <p>25.0% vs 20.4%</p>
+    </div>
+    <div class="card">
+      <div class="stat amber">+27%</div>
+      <h4>More Mental Distress</h4>
+      <p>15.9% vs 12.5%</p>
+    </div>
+    <div class="card">
+      <div class="stat amber">+160%</div>
+      <h4>More Food Stamps</h4>
+      <p>13.9% vs 5.3%</p>
+    </div>
+  </div>
+  <div class="spacer"></div>
+  <p class="small" style="color:#475569;">Source: CDC PLACES 2023. This is established public health context — not derived from the CivicPulse data join.</p>
+</div>
+
+<!-- Navigation -->
+<div class="nav">
+  <button onclick="prev()">&#8592; Prev</button>
+  <button onclick="next()">Next &#8594;</button>
+</div>
+<div class="slide-counter" id="counter">1 / 11</div>
+
+<script>
+  let current = 0;
+  const slides = document.querySelectorAll('.slide');
+  const counter = document.getElementById('counter');
+
+  function show(n) {
+    slides[current].classList.remove('active');
+    current = (n + slides.length) % slides.length;
+    slides[current].classList.add('active');
+    counter.textContent = `${current + 1} / ${slides.length}`;
+  }
+
+  function next() { show(current + 1); }
+  function prev() { show(current - 1); }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); next(); }
+    if (e.key === 'ArrowLeft') prev();
+    if (e.key === 'Home') show(0);
+    if (e.key === 'End') show(slides.length - 1);
+  });
+</script>
+
+<script>
+// ── Leaflet map for slide 4 (ZIP 95122 Ground Zero) ──────────────────────────
+(function() {
+  // Approximate ZIP code polygons (real-world coordinates)
+  const zips = [
+    // 95122 — East San Jose — FOCAL (risk 82.1)
+    { zip: '95122', risk: 82, color: '#dc2626', weight: 2.5,
+      coords: [[37.354,-121.877],[37.354,-121.818],[37.310,-121.818],[37.310,-121.877]] },
+    // 95116 — East SJ north (risk 82.9)
+    { zip: '95116', risk: 83, color: '#ef4444', weight: 1.5,
+      coords: [[37.384,-121.877],[37.384,-121.840],[37.354,-121.840],[37.354,-121.877]] },
+    // 95113 — Downtown (risk 83.4)
+    { zip: '95113', risk: 83, color: '#ef4444', weight: 1.5,
+      coords: [[37.340,-121.910],[37.340,-121.877],[37.318,-121.877],[37.318,-121.910]] },
+    // 95112 — Near downtown (risk 81.5)
+    { zip: '95112', risk: 82, color: '#f97316', weight: 1.5,
+      coords: [[37.354,-121.877],[37.354,-121.850],[37.340,-121.850],[37.340,-121.877]] },
+    // 95148 — East hills (risk 75.7)
+    { zip: '95148', risk: 76, color: '#f97316', weight: 1,
+      coords: [[37.354,-121.818],[37.354,-121.780],[37.310,-121.780],[37.310,-121.818]] },
+    // 95127 — Alum Rock (risk ~68)
+    { zip: '95127', risk: 68, color: '#fb923c', weight: 1,
+      coords: [[37.384,-121.840],[37.384,-121.800],[37.354,-121.800],[37.354,-121.840]] },
+    // 95128 — West SJ (lower)
+    { zip: '95128', risk: 48, color: '#22c55e', weight: 1,
+      coords: [[37.330,-121.960],[37.330,-121.910],[37.305,-121.910],[37.305,-121.960]] },
+    // 95050 — Santa Clara (lower)
+    { zip: '95050', risk: 42, color: '#22c55e', weight: 1,
+      coords: [[37.365,-121.990],[37.365,-121.950],[37.340,-121.950],[37.340,-121.990]] },
+    // 95035 — Milpitas (medium)
+    { zip: '95035', risk: 55, color: '#facc15', weight: 1,
+      coords: [[37.440,-121.920],[37.440,-121.865],[37.400,-121.865],[37.400,-121.920]] },
+  ];
+
+  function riskOpacity(risk) {
+    if (risk >= 80) return 0.40;
+    if (risk >= 65) return 0.28;
+    return 0.18;
+  }
+
+  function initMap() {
+    const el = document.getElementById('zip-map');
+    if (!el || el._mapInit) return;
+    el._mapInit = true;
+
+    const map = L.map('zip-map', {
+      center: [37.336, -121.855],
+      zoom: 12,
+      zoomControl: true,
+      scrollWheelZoom: false,
+      attributionControl: false
+    });
+
+    // CartoDB Positron — clean light tiles, no API key needed
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+      subdomains: 'abcd',
+      maxZoom: 19
+    }).addTo(map);
+
+    // Draw ZIP polygons
+    zips.forEach(z => {
+      const poly = L.polygon(z.coords, {
+        color: z.color,
+        weight: z.weight,
+        fillColor: z.color,
+        fillOpacity: riskOpacity(z.risk),
+        opacity: 0.9
+      }).addTo(map);
+
+      // ZIP label via tooltip
+      const center = poly.getBounds().getCenter();
+      L.tooltip({ permanent: true, direction: 'center', className: 'zip-label' })
+       .setContent(`<b>${z.zip}</b>`)
+       .setLatLng(center)
+       .addTo(map);
+    });
+
+    // Restaurant markers (top offenders in 95122)
+    const restaurants = [
+      { name: 'Banh Mi Oven', lat: 37.322, lng: -121.833, red: 9, crit: 23 },
+      { name: 'Tomi Sushi & Seafood', lat: 37.335, lng: -121.847, red: 5, crit: 11 },
+      { name: 'Banh Cuon Ong Ta', lat: 37.338, lng: -121.849, red: 4, crit: 11 },
+      { name: 'Los Arcos', lat: 37.329, lng: -121.840, red: 2, crit: 14 },
+    ];
+
+    const icon = L.divIcon({
+      html: `<div style="width:10px;height:10px;background:#dc2626;border:2px solid white;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,0.4);"></div>`,
+      iconSize: [10, 10],
+      iconAnchor: [5, 5],
+      className: ''
+    });
+
+    restaurants.forEach(r => {
+      L.marker([r.lat, r.lng], { icon })
+       .bindPopup(`<b>${r.name}</b><br>${r.red} Red · ${r.crit} critical`)
+       .addTo(map);
+    });
+
+    // Attribution bottom-right (small)
+    L.control.attribution({ prefix: '© OpenStreetMap · CartoDB' }).addTo(map);
+  }
+
+  // Initialize when slide 4 (s4) first becomes visible
+  const s4 = document.getElementById('s4');
+  const observer = new MutationObserver(() => {
+    if (s4.classList.contains('active')) initMap();
+  });
+  if (s4) {
+    observer.observe(s4, { attributes: true, attributeFilter: ['class'] });
+    if (s4.classList.contains('active')) initMap();
+  }
+})();
+</script>
+
+<style>
+.zip-label {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  font-family: Inter, sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  color: #1e293b;
+  text-shadow: 0 0 3px white, 0 0 3px white;
+}
+.zip-label::before { display: none !important; }
+</style>
+</body>
+</html>
