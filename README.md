@@ -6,10 +6,16 @@ NVIDIA GB10 Hackathon | Human Impact Track
 
 ---
 
-| Asset | Link |
-|-------|------|
-| **Demo Video** | [civicpulse.mov](https://github.com/jiahknee5/civicpulse/raw/main/civicpulse.mov) |
-| **Pitch Deck** | [pitch_deck.html](https://github.com/jiahknee5/civicpulse/blob/main/pitch_deck.html) — download and open in browser, arrow keys to navigate |
+### > Start here: [**Download the Pitch Deck**](pitch_deck.html) *(right-click → Save As → open in browser → arrow keys to navigate)*
+
+The pitch deck contains the full story: problem, data findings, agent architecture, district scorecards, recommended actions with projected impact ($4.4M savings, 436 failed inspections prevented), and detailed technical appendix. **20+ slides.**
+
+---
+
+| Asset | Description |
+|-------|-------------|
+| **[Pitch Deck](pitch_deck.html)** | Full presentation — problem, findings, architecture, impact projections, appendix |
+| **[Demo Video](https://github.com/jiahknee5/civicpulse/raw/main/civicpulse.mov)** | Screen recording of the live 4-agent pipeline |
 | **Command Center** | `demo/command_center.py` — live 4-agent pipeline on port 7860 |
 | **Behind the Scenes** | `demo/behind_the_scenes.py` — data pipeline, risk map, agent internals on port 7861 |
 
