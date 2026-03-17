@@ -4,26 +4,27 @@
 
 NVIDIA GB10 Hackathon | Human Impact Track
 
-## Demo Video
+---
 
-https://github.com/jiahknee5/civicpulse/raw/main/civicpulse.mov
+| Asset | Link |
+|-------|------|
+| **Demo Video** | [civicpulse.mov](https://github.com/jiahknee5/civicpulse/raw/main/civicpulse.mov) |
+| **Pitch Deck** | [pitch_deck.html](https://github.com/jiahknee5/civicpulse/blob/main/pitch_deck.html) — download and open in browser, arrow keys to navigate |
+| **Command Center** | `demo/command_center.py` — live 4-agent pipeline on port 7860 |
+| **Behind the Scenes** | `demo/behind_the_scenes.py` — data pipeline, risk map, agent internals on port 7861 |
 
-## Pitch Deck
-
-**[View the slides](pitch_deck.html)** — download and open in browser, arrow keys to navigate. 20+ slides including appendix with architecture, data dictionary, agent specs, and district scorecards.
+---
 
 ## Live Demo
 
-The demo runs on NVIDIA DGX Spark (GB10) with Nemotron 70B via Ollama. Start the app and open `http://<GB10_IP>:7860` in your browser.
+The demo runs on NVIDIA DGX Spark (GB10) with Nemotron 70B via Ollama. All inference on-device — no cloud, no API calls.
 
 ```bash
-cd app
-pip install -r requirements.txt
-python3 data_pipeline.py   # Build data joins (run once)
-python3 server.py          # Start app on :7860
+./demo/launch.sh            # Starts both apps (builds data on first run)
 ```
 
-Select a flagged ZIP code and click **Run Pipeline** to watch 4 agents reason across 8 datasets in real-time with streaming output.
+- **Command Center** → `http://localhost:7860` — select a ZIP, run the 4-agent pipeline live
+- **Behind the Scenes** → `http://localhost:7861` — data foundation, risk map, agent deep dive, district scorecard
 
 ## What It Does
 

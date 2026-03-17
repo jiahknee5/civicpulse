@@ -1,0 +1,492 @@
+[
+  {
+    "zip": "95113",
+    "name": "ZCTA5 95113",
+    "risk_score": 83.7,
+    "businesses": 241,
+    "total_red": 41,
+    "total_critical": 359,
+    "repeat_offenders": 7,
+    "poverty_rate": 18.8,
+    "median_income": 133021,
+    "crime_on_food_streets": 4264,
+    "worst_businesses": [
+      {
+        "name": "MOSAIC RESTAURANT & LOUNGE",
+        "city": "SAN JOSE",
+        "critical_violations": 11,
+        "red_inspections": 4,
+        "top_violations": "Proper hot and cold holding temperatures (4x); Food in good condition, safe, unadulterated (3x); Sewage and wastewater properly disposed (2x)"
+      },
+      {
+        "name": "TESKE'S GERMANIA RESTAURANT",
+        "city": "SAN JOSE",
+        "critical_violations": 9,
+        "red_inspections": 4,
+        "top_violations": "No rodents, insects, birds, or animals (5x); Proper hot and cold holding temperatures (1x); Food in good condition, safe, unadulterated (1x)"
+      },
+      {
+        "name": "EGGHEAD",
+        "city": "SAN JOSE",
+        "critical_violations": 9,
+        "red_inspections": 0,
+        "top_violations": "Adequate handwash facilities supplied, accessible (3x); Proper hot and cold holding temperatures (3x); Proper cooling methods (1x)"
+      },
+      {
+        "name": "PHO PASSION & MINT TEA CO",
+        "city": "SAN JOSE",
+        "critical_violations": 7,
+        "red_inspections": 1,
+        "top_violations": "Proper hot and cold holding temperatures (2x); Time as a public health control; procedures & reco (1x); Sewage and wastewater properly disposed (1x)"
+      },
+      {
+        "name": "PUNJAB CAFE INDIAN CUISINE",
+        "city": "SAN JOSE",
+        "critical_violations": 7,
+        "red_inspections": 0,
+        "top_violations": "Proper hot and cold holding temperatures (3x); Proper cooling methods (1x); No rodents, insects, birds, or animals (1x)"
+      }
+    ]
+  },
+  {
+    "zip": "95112",
+    "name": "ZCTA5 95112",
+    "risk_score": 82.7,
+    "businesses": 348,
+    "total_red": 55,
+    "total_critical": 442,
+    "repeat_offenders": 10,
+    "poverty_rate": 16.5,
+    "median_income": 85080,
+    "crime_on_food_streets": 7694,
+    "worst_businesses": [
+      {
+        "name": "MARISCOS COSTA ALEGRE",
+        "city": "SAN JOSE",
+        "critical_violations": 11,
+        "red_inspections": 0,
+        "top_violations": "Proper hot and cold holding temperatures (4x); Proper cooling methods (4x); Time as a public health control; procedures & reco (1x)"
+      },
+      {
+        "name": "THE FAB",
+        "city": "SAN JOSE",
+        "critical_violations": 11,
+        "red_inspections": 0,
+        "top_violations": "Proper hot and cold holding temperatures (6x); Food in good condition, safe, unadulterated (3x); Food contact surfaces clean, sanitized (1x)"
+      },
+      {
+        "name": "HOME EAT",
+        "city": "SAN JOSE",
+        "critical_violations": 10,
+        "red_inspections": 1,
+        "top_violations": "Proper hot and cold holding temperatures (4x); Adequate handwash facilities supplied, accessible (2x); Food contact surfaces clean, sanitized (2x)"
+      },
+      {
+        "name": "CALI SPARTAN MEXICAN KITCHEN",
+        "city": "SAN JOSE",
+        "critical_violations": 8,
+        "red_inspections": 0,
+        "top_violations": "Proper cooling methods (3x); Proper hot and cold holding temperatures (2x); Food in good condition, safe, unadulterated (2x)"
+      },
+      {
+        "name": "PHO LIEN NOODLE HOUSE",
+        "city": "SAN JOSE",
+        "critical_violations": 7,
+        "red_inspections": 0,
+        "top_violations": "Hands clean, properly washed; gloves used properly (2x); Food contact surfaces clean, sanitized (2x); Proper hot and cold holding temperatures (2x)"
+      }
+    ]
+  },
+  {
+    "zip": "95122",
+    "name": "ZCTA5 95122",
+    "risk_score": 81.7,
+    "businesses": 341,
+    "total_red": 100,
+    "total_critical": 683,
+    "repeat_offenders": 22,
+    "poverty_rate": 10.5,
+    "median_income": 94924,
+    "crime_on_food_streets": 4187,
+    "worst_businesses": [
+      {
+        "name": "BANH MI OVEN",
+        "city": "SAN JOSE",
+        "critical_violations": 23,
+        "red_inspections": 9,
+        "top_violations": "No rodents, insects, birds, or animals (9x); Food obtained from approved source (3x); Hands clean, properly washed; gloves used properly (3x)"
+      },
+      {
+        "name": "LOS ARCOS",
+        "city": "SAN JOSE",
+        "critical_violations": 14,
+        "red_inspections": 2,
+        "top_violations": "Adequate handwash facilities supplied, accessible (4x); No rodents, insects, birds, or animals (3x); Proper hot and cold holding temperatures (2x)"
+      },
+      {
+        "name": "DUC HUONG SANDWICHES / BAKERY",
+        "city": "SAN JOSE",
+        "critical_violations": 14,
+        "red_inspections": 0,
+        "top_violations": "Proper hot and cold holding temperatures (3x); Proper reheating procedures for hot holding (3x); Hands clean, properly washed; gloves used properly (3x)"
+      },
+      {
+        "name": "DONG PHUONG TOFU & VEGETARIAN",
+        "city": "SAN JOSE",
+        "critical_violations": 11,
+        "red_inspections": 1,
+        "top_violations": "Proper hot and cold holding temperatures (4x); Time as a public health control; procedures & reco (2x); Food obtained from approved source (2x)"
+      },
+      {
+        "name": "QUE HUONG FAST FOOD",
+        "city": "SAN JOSE",
+        "critical_violations": 11,
+        "red_inspections": 0,
+        "top_violations": "Proper hot and cold holding temperatures (3x); Proper cooling methods (2x); Time as a public health control; procedures & reco (2x)"
+      }
+    ]
+  },
+  {
+    "zip": "95116",
+    "name": "ZCTA5 95116",
+    "risk_score": 81.6,
+    "businesses": 176,
+    "total_red": 39,
+    "total_critical": 235,
+    "repeat_offenders": 10,
+    "poverty_rate": 11.3,
+    "median_income": 81216,
+    "crime_on_food_streets": 4080,
+    "worst_businesses": [
+      {
+        "name": "MARISCOS PLAYA AZUL",
+        "city": "SAN JOSE",
+        "critical_violations": 16,
+        "red_inspections": 4,
+        "top_violations": "No rodents, insects, birds, or animals (8x); Proper hot and cold holding temperatures (3x); Adequate handwash facilities supplied, accessible (3x)"
+      },
+      {
+        "name": "DUC HUONG",
+        "city": "SAN JOSE",
+        "critical_violations": 11,
+        "red_inspections": 0,
+        "top_violations": "Proper hot and cold holding temperatures (4x); Proper reheating procedures for hot holding (2x); Food obtained from approved source (2x)"
+      },
+      {
+        "name": "NEW DONG PHUONG TOFU",
+        "city": "SAN JOSE",
+        "critical_violations": 9,
+        "red_inspections": 4,
+        "top_violations": "No rodents, insects, birds, or animals (4x); Food obtained from approved source (2x); Proper hot and cold holding temperatures (2x)"
+      },
+      {
+        "name": "KV NOODLE",
+        "city": "SAN JOSE",
+        "critical_violations": 9,
+        "red_inspections": 2,
+        "top_violations": "No rodents, insects, birds, or animals (2x); Food in good condition, safe, unadulterated (2x); Proper hot and cold holding temperatures (2x)"
+      },
+      {
+        "name": "LA PLAZA MARKET GROCERY",
+        "city": "SAN JOSE",
+        "critical_violations": 7,
+        "red_inspections": 0,
+        "top_violations": "Adequate handwash facilities supplied, accessible (2x); Proper hot and cold holding temperatures (2x); Sewage and wastewater properly disposed (1x)"
+      }
+    ]
+  },
+  {
+    "zip": "95127",
+    "name": "ZCTA5 95127",
+    "risk_score": 73.9,
+    "businesses": 145,
+    "total_red": 8,
+    "total_critical": 164,
+    "repeat_offenders": 2,
+    "poverty_rate": 8.1,
+    "median_income": 118770,
+    "crime_on_food_streets": 7139,
+    "worst_businesses": [
+      {
+        "name": "MI RANCHO TAQUERIA",
+        "city": "SAN JOSE",
+        "critical_violations": 10,
+        "red_inspections": 0,
+        "top_violations": "Food contact surfaces clean, sanitized (5x); Proper hot and cold holding temperatures (4x); Adequate handwash facilities supplied, accessible (1x)"
+      },
+      {
+        "name": "LA PLAZA MARKET - TAQUERIA",
+        "city": "SAN JOSE",
+        "critical_violations": 6,
+        "red_inspections": 0,
+        "top_violations": "Food contact surfaces clean, sanitized (2x); Proper cooling methods (2x); Proper hot and cold holding temperatures (2x)"
+      },
+      {
+        "name": "H SALT FISH & CHIPS RESTAURANT",
+        "city": "SAN JOSE",
+        "critical_violations": 4,
+        "red_inspections": 1,
+        "top_violations": "Sewage and wastewater properly disposed (1x); Proper hot and cold holding temperatures (1x); Food contact surfaces clean, sanitized (1x)"
+      },
+      {
+        "name": "7-ELEVEN FOOD STORE #14267A",
+        "city": "SAN JOSE",
+        "critical_violations": 4,
+        "red_inspections": 0,
+        "top_violations": "Proper hot and cold holding temperatures (3x); Adequate handwash facilities supplied, accessible (1x)"
+      },
+      {
+        "name": "MEXICO BAKERY #1",
+        "city": "SAN JOSE",
+        "critical_violations": 4,
+        "red_inspections": 0,
+        "top_violations": "Food contact surfaces clean, sanitized (2x); Proper hot and cold holding temperatures (1x); Adequate handwash facilities supplied, accessible (1x)"
+      }
+    ]
+  },
+  {
+    "zip": "95014",
+    "name": "ZCTA5 95014",
+    "risk_score": 73.4,
+    "businesses": 330,
+    "total_red": 39,
+    "total_critical": 480,
+    "repeat_offenders": 9,
+    "poverty_rate": 5.1,
+    "median_income": 222878,
+    "crime_on_food_streets": 19290,
+    "worst_businesses": [
+      {
+        "name": "GRANDMA'S KITCHEN",
+        "city": "CUPERTINO",
+        "critical_violations": 17,
+        "red_inspections": 3,
+        "top_violations": "Proper hot and cold holding temperatures (3x); No rodents, insects, birds, or animals (3x); Food in good condition, safe, unadulterated (3x)"
+      },
+      {
+        "name": "EASTERLY",
+        "city": "CUPERTINO",
+        "critical_violations": 12,
+        "red_inspections": 0,
+        "top_violations": "Proper hot and cold holding temperatures (5x); Adequate handwash facilities supplied, accessible (3x); Communicable disease; reporting/restriction/exclus (1x)"
+      },
+      {
+        "name": "HEY CHICKEN CUPERTINO",
+        "city": "CUPERTINO",
+        "critical_violations": 11,
+        "red_inspections": 3,
+        "top_violations": "No rodents, insects, birds, or animals (3x); Proper hot and cold holding temperatures (3x); Adequate handwash facilities supplied, accessible (2x)"
+      },
+      {
+        "name": "HOME EAT",
+        "city": "CUPERTINO",
+        "critical_violations": 9,
+        "red_inspections": 0,
+        "top_violations": "Proper hot and cold holding temperatures (4x); Hands clean, properly washed; gloves used properly (2x); Food in good condition, safe, unadulterated (2x)"
+      },
+      {
+        "name": "KIKU SUSHI - GROCERY",
+        "city": "CUPERTINO",
+        "critical_violations": 9,
+        "red_inspections": 0,
+        "top_violations": "Adequate handwash facilities supplied, accessible (3x); Proper hot and cold holding temperatures (3x); Food contact surfaces clean, sanitized (2x)"
+      }
+    ]
+  },
+  {
+    "zip": "95111",
+    "name": "ZCTA5 95111",
+    "risk_score": 71.6,
+    "businesses": 145,
+    "total_red": 8,
+    "total_critical": 162,
+    "repeat_offenders": 0,
+    "poverty_rate": 9.0,
+    "median_income": 90808,
+    "crime_on_food_streets": 3650,
+    "worst_businesses": [
+      {
+        "name": "OCEAN DELIGHT RESTAURANT",
+        "city": "SAN JOSE",
+        "critical_violations": 6,
+        "red_inspections": 0,
+        "top_violations": "Proper hot and cold holding temperatures (2x); Compliance with shell stock tags, condition, displ (2x); No rodents, insects, birds, or animals (1x)"
+      },
+      {
+        "name": "CONASUPER",
+        "city": "SAN JOSE",
+        "critical_violations": 6,
+        "red_inspections": 1,
+        "top_violations": "Proper hot and cold holding temperatures (3x); Adequate handwash facilities supplied, accessible (2x); Hot and cold water available (1x)"
+      },
+      {
+        "name": "LEUNG NOODLE RESTAURANT",
+        "city": "SAN JOSE",
+        "critical_violations": 5,
+        "red_inspections": 0,
+        "top_violations": "Proper hot and cold holding temperatures (3x); No rodents, insects, birds, or animals (1x); Food in good condition, safe, unadulterated (1x)"
+      },
+      {
+        "name": "MERCADO CALIFORNIA",
+        "city": "SAN JOSE",
+        "critical_violations": 5,
+        "red_inspections": 0,
+        "top_violations": "Proper hot and cold holding temperatures (3x); Proper cooling methods (2x)"
+      },
+      {
+        "name": "LEE'S SANDWICHES",
+        "city": "SAN JOSE",
+        "critical_violations": 5,
+        "red_inspections": 1,
+        "top_violations": "No rodents, insects, birds, or animals (2x); Proper hot and cold holding temperatures (1x); Food obtained from approved source (1x)"
+      }
+    ]
+  },
+  {
+    "zip": "95148",
+    "name": "ZCTA5 95148",
+    "risk_score": 68.5,
+    "businesses": 66,
+    "total_red": 9,
+    "total_critical": 93,
+    "repeat_offenders": 1,
+    "poverty_rate": 6.5,
+    "median_income": 158565,
+    "crime_on_food_streets": 1451,
+    "worst_businesses": [
+      {
+        "name": "NEW HWONGKOK",
+        "city": "SAN JOSE",
+        "critical_violations": 7,
+        "red_inspections": 0,
+        "top_violations": "Adequate handwash facilities supplied, accessible (2x); Hands clean, properly washed; gloves used properly (2x); Proper hot and cold holding temperatures (2x)"
+      },
+      {
+        "name": "MANILA ORIENTAL MARKET",
+        "city": "SAN JOSE",
+        "critical_violations": 6,
+        "red_inspections": 0,
+        "top_violations": "Food contact surfaces clean, sanitized (3x); Hot and cold water available (2x); Adequate handwash facilities supplied, accessible (1x)"
+      },
+      {
+        "name": "EVERGREEN INN & PUB",
+        "city": "SAN JOSE",
+        "critical_violations": 6,
+        "red_inspections": 0,
+        "top_violations": "Proper hot and cold holding temperatures (3x); Hands clean, properly washed; gloves used properly (2x); Adequate handwash facilities supplied, accessible (1x)"
+      },
+      {
+        "name": "LEE'S SANDWICHES #3",
+        "city": "SAN JOSE",
+        "critical_violations": 6,
+        "red_inspections": 0,
+        "top_violations": "Time as a public health control; procedures & reco (3x); Adequate handwash facilities supplied, accessible (1x); Proper hot and cold holding temperatures (1x)"
+      },
+      {
+        "name": "EAST LAKE CHINESE SEAFOOD",
+        "city": "SAN JOSE",
+        "critical_violations": 5,
+        "red_inspections": 1,
+        "top_violations": "Proper hot and cold holding temperatures (2x); Food contact surfaces clean, sanitized (2x); No rodents, insects, birds, or animals (1x)"
+      }
+    ]
+  },
+  {
+    "zip": "95050",
+    "name": "ZCTA5 95050",
+    "risk_score": 68.4,
+    "businesses": 300,
+    "total_red": 12,
+    "total_critical": 218,
+    "repeat_offenders": 2,
+    "poverty_rate": 11.4,
+    "median_income": 119356,
+    "crime_on_food_streets": 7975,
+    "worst_businesses": [
+      {
+        "name": "CASA EN EL AIRE GASTROBAR",
+        "city": "SANTA CLARA",
+        "critical_violations": 9,
+        "red_inspections": 0,
+        "top_violations": "Proper hot and cold holding temperatures (3x); Hands clean, properly washed; gloves used properly (2x); Adequate handwash facilities supplied, accessible (2x)"
+      },
+      {
+        "name": "EMELINA'S PERUVIAN RESTAURANT",
+        "city": "SANTA CLARA",
+        "critical_violations": 7,
+        "red_inspections": 1,
+        "top_violations": "Proper hot and cold holding temperatures (3x); No rodents, insects, birds, or animals (3x); Food contact surfaces clean, sanitized (1x)"
+      },
+      {
+        "name": "TAQUERIA LA VERACRUZANA",
+        "city": "SANTA CLARA",
+        "critical_violations": 6,
+        "red_inspections": 1,
+        "top_violations": "Proper hot and cold holding temperatures (2x); Adequate handwash facilities supplied, accessible (2x); No rodents, insects, birds, or animals (1x)"
+      },
+      {
+        "name": "AKITA SUSHI",
+        "city": "SANTA CLARA",
+        "critical_violations": 6,
+        "red_inspections": 0,
+        "top_violations": "Time as a public health control; procedures & reco (4x); Adequate handwash facilities supplied, accessible (2x)"
+      },
+      {
+        "name": "DUSITA THAI CUISINE",
+        "city": "SANTA CLARA",
+        "critical_violations": 5,
+        "red_inspections": 2,
+        "top_violations": "No rodents, insects, birds, or animals (2x); Proper hot and cold holding temperatures (1x); Food contact surfaces clean, sanitized (1x)"
+      }
+    ]
+  },
+  {
+    "zip": "95129",
+    "name": "ZCTA5 95129",
+    "risk_score": 67.6,
+    "businesses": 223,
+    "total_red": 15,
+    "total_critical": 313,
+    "repeat_offenders": 4,
+    "poverty_rate": 4.0,
+    "median_income": 178818,
+    "crime_on_food_streets": 11226,
+    "worst_businesses": [
+      {
+        "name": "MYLAPORE SOUTH INDIAN VEGETARIAN",
+        "city": "SAN JOSE",
+        "critical_violations": 9,
+        "red_inspections": 1,
+        "top_violations": "Adequate handwash facilities supplied, accessible (2x); Food contact surfaces clean, sanitized (2x); Time as a public health control; procedures & reco (2x)"
+      },
+      {
+        "name": "LIUYISHOU HOT POT SAN JOSE/LIUYISHOU HOT POT CUPERTINO",
+        "city": "SAN JOSE",
+        "critical_violations": 9,
+        "red_inspections": 0,
+        "top_violations": "Time as a public health control; procedures & reco (5x); Food contact surfaces clean, sanitized (2x); Adequate handwash facilities supplied, accessible (2x)"
+      },
+      {
+        "name": "INDIA CASH & CARRY (KITCHEN)",
+        "city": "SAN JOSE",
+        "critical_violations": 8,
+        "red_inspections": 0,
+        "top_violations": "Proper hot and cold holding temperatures (4x); Time as a public health control; procedures & reco (3x); No rodents, insects, birds, or animals (1x)"
+      },
+      {
+        "name": "CHEFUS-CA",
+        "city": "SAN JOSE",
+        "critical_violations": 7,
+        "red_inspections": 0,
+        "top_violations": "Proper hot and cold holding temperatures (2x); Food obtained from approved source (2x); Adequate handwash facilities supplied, accessible (2x)"
+      },
+      {
+        "name": "MEENAKSHI BHAVAN",
+        "city": "SAN JOSE",
+        "critical_violations": 6,
+        "red_inspections": 2,
+        "top_violations": "Adequate handwash facilities supplied, accessible (2x); Proper hot and cold holding temperatures (2x); Time as a public health control; procedures & reco (1x)"
+      }
+    ]
+  }
+]

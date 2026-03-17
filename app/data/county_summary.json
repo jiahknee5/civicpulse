@@ -1,0 +1,10 @@
+{
+  "total_businesses": 8588,
+  "total_inspections": 21895,
+  "total_red": 800,
+  "total_critical": 9255,
+  "total_repeat_offenders": 161,
+  "temperature_violations": 3442,
+  "county_avg_food_insecurity": 12.7,
+  "county_avg_diabetes": 10.3
+}
