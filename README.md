@@ -9,6 +9,7 @@ NVIDIA GB10 Hackathon | Human Impact Track | Johnny Chung
 ### Start here: [**Pitch Deck**](pitch_deck.html) *(right-click → Save As → open in browser → arrow keys)*
 
 20+ slides covering the problem, real data findings, 4-agent architecture, district scorecards, recommended actions, projected impact, and full technical appendix.
+You can find the movie here - https://github.com/jiahknee5/civicpulse/blob/main/civicpulse.mov
 
 ---
 
