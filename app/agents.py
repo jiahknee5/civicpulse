@@ -1,4 +1,15 @@
-"""CivicPulse Agent System — 4 agents orchestrated through OpenClaw pattern."""
+"""CivicPulse Agent System — 4 agents orchestrated through OpenClaw pattern.
+
+Architecture follows OpenClaw's multi-agent orchestration model:
+  - Specialized agents with distinct roles and system prompts
+  - Context passing: each agent receives prior agent's output as input
+  - Decision boundaries: Sentinel decides what to flag, Analyst decides severity,
+    Advisor decides what to recommend, Messenger decides urgency/routing
+  - Shared agent log for traceability and observability
+
+OpenClaw package installed (pip install openclaw) but has a runtime dependency
+conflict. Orchestration implemented directly using the same pattern.
+"""
 import json
 import time
 import requests

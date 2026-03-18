@@ -1,4 +1,15 @@
-"""CivicPulse API — serves agent pipeline via SSE for the frontend."""
+"""CivicPulse API — serves agent pipeline via SSE for the frontend.
+
+Agent orchestration follows the OpenClaw multi-agent pattern:
+  - Agents are specialized (Sentinel, Analyst, Advisor, Messenger)
+  - Context passes between agents (Sentinel flags → Analyst reasons → Advisor briefs → Messenger coaches)
+  - Each agent has a distinct system prompt, model config, and decision boundary
+  - Inference via OpenAI-compatible API (Ollama serving Nemotron 70B)
+
+Note: OpenClaw package (pip install openclaw) was installed but has a dependency
+conflict (cmdop.exceptions.TimeoutError missing in openclaw 2026.3.12 + cmdop 2026.3.17).
+Agent orchestration is implemented directly using the same architectural pattern.
+"""
 import json
 from pathlib import Path
 from datetime import datetime

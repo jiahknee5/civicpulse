@@ -67,6 +67,7 @@ Runs entirely on **NVIDIA DGX Spark (GB10)** — Nemotron 70B (42GB) via Ollama.
 |-----------|-----------|
 | Hardware | NVIDIA DGX Spark (GB10) — Grace Blackwell, 128GB unified LPDDR5x |
 | Model | Nemotron 70B (42GB) via Ollama — all inference on-device |
+| Orchestration | OpenClaw multi-agent pattern — 4 specialized agents with context passing and decision boundaries |
 | Backend | FastAPI + Server-Sent Events (SSE) for real-time streaming |
 | Frontend | Vanilla HTML/CSS/JS |
 | Data | 6 SCC datasets + US Census ACS (62 zips) + CDC PLACES (408 tracts, 40 health measures) |
